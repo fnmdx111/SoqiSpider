@@ -14,7 +14,8 @@ def _grab(keyword, page_number, pool, city_code='100000', predicate=None):
     page_number: 页数
     pool: 所用的HTTP连接池
     city_code: 城市号
-    predicate: 过滤所用的谓词"""
+    predicate: 过滤所用的谓词
+    返回: 过滤好的，所抓取的CorpItem对象列表"""
     global last_page_found # 最后一页的页码
 
     if not predicate: # 默认的谓词检测公司名是否以keyword结尾，并且CorpItem对象要有主页（不一定可用）
@@ -53,9 +54,12 @@ def _grab(keyword, page_number, pool, city_code='100000', predicate=None):
             filter(predicate, candidates))
 
 
-def grab(corp_name, pool, pages, func=None):
+def grab(keyword, pool, pages, city_code='100000', func=None, predicate=None):
+    """对给定的页面列表（离散的）进行批量抓取（即调用_grab）
+    抛出: 页面号，是否是空页面的变量，所抓取的CorpItem对象列表
+    # 参数与_grab相同，略"""
     for page in pages:
-        is_empty_page, grabbed = _grab(corp_name, page, pool)
+        is_empty_page, grabbed = _grab(keyword, page, pool, city_code=city_code, predicate=predicate)
 
         if func: # feeling funky lol
             for item in grabbed:

@@ -3,18 +3,23 @@
 import threading
 from common import dbg
 from bs4 import BeautifulSoup
-from constants import headers
+from constants import headers, common_headers
 from urllib3.connectionpool import HTTPConnectionPool
 import urllib2
 from urllib2 import URLError
 import re
 
 class CorpItem(object):
+    """对抓取的单个企业数据的集合，和一些常用方法的集合"""
 
     _soqi_conn_pool = HTTPConnectionPool(host='www.soqi.cn', maxsize=50, block=True, headers=headers)
     id_pattern = re.compile(r'id_([0-9a-zA-Z]+)\.html$')
 
     def __init__(self, raw_content, page_num, city_id):
+        """构造函数
+        raw_content: bs4里的对象，根节点应为<li>
+        page_num: 被抓取到的页数
+        city_id: 被抓去到的城市号"""
         self.page_num = page_num
         self.city_id = city_id
 
@@ -23,6 +28,10 @@ class CorpItem(object):
 
     @staticmethod
     def get_corp_id_and_name(li, obj=None):
+        """根据<li>获取id和企业名称
+        li: 根节点为<li>的bs4里的对象
+        obj: 一个CorpItem对象，如果不是None，则它的id_page会被设为其在soqi.cn里的页面
+        返回: 企业id和名称"""
         a = li.find_all(name='div', attrs={'class': 'resultName'})[0].h3.a
 
         if obj:
@@ -30,11 +39,14 @@ class CorpItem(object):
 
         matches = CorpItem.id_pattern.search(a.get('href'))
 
-        return matches.group(1) if matches else '', a.get_text().encode('utf-8')
+        return matches.group(1).encode('utf-8') if matches else '', a.get_text().encode('utf-8')
 
 
     @staticmethod
     def get_corp_link(li):
+        """根据<li>获取企业主页地址
+        li: 略
+        返回: 企业主页地址，若没有则返回空"""
         cite = li.find_all(name='cite')[0]
 
         if cite.find(name='a'):
@@ -45,17 +57,27 @@ class CorpItem(object):
 
     @staticmethod
     def get_corp_intro_and_product(soup):
-        extractor = lambda name: ''.join(soup.find_all(name='h3', text=name.decode('utf-8'))[0].next_sibling.next_sibling.get_text().split()).encode('utf-8')
+        """根据企业在soqi.cn里的页面返回企业介绍和产品介绍
+        soup: bs4里的对象，内容应为企业页面
+        返回: 企业介绍和产品介绍（utf-8编码）"""
+        extractor = lambda name: soup.find_all(
+                name='h3',
+                text=name.decode('utf-8')
+            )[0].next_sibling.next_sibling.get_text().encode('utf-8').lstrip().rstrip()
 
         return extractor('产品及服务'), extractor('公司简介')
 
 
     def is_valid_item(self):
+        """根据企业主页地址判断是否是合法的对象（没用主页的一律抛弃）"""
         if self.website:
             return True
 
 
     def extract_info(self, raw_content):
+        """根据raw_content抽取所需要的信息
+        raw_content: 略
+        返回: 无"""
         self.id_page = ''
         self.id, self.corp_name = CorpItem.get_corp_id_and_name(raw_content, self)
         self.id = self.city_id + '_' + self.id
@@ -65,12 +87,14 @@ class CorpItem(object):
         self.introduction = ''
 
         def per_thread():
+            """略"""
             if self.website:
                 try:
-                    response = urllib2.urlopen(self.website)
+                    request = urllib2.Request(self.website, headers=common_headers)
+                    response = urllib2.urlopen(request)
                     dbg('connecting %s' % self.website)
                     if response:
-                        self.website_title = BeautifulSoup(response.read(), 'lxml').title.get_text()
+                        self.website_title = BeautifulSoup(response.read(), 'lxml').head.title.get_text().encode('utf-8')
                     else:
                         return
                     if not self.website_title:
@@ -79,20 +103,21 @@ class CorpItem(object):
                     response = CorpItem._soqi_conn_pool.request('GET', self.id_page)
                     self.introduction, self.product = CorpItem.get_corp_intro_and_product(BeautifulSoup(response.data, 'lxml'))
                 except URLError as e:
-                    dbg('!!!!!!!!!!!!%s %s' % (e, self.website.__repr__()))
+                    dbg('%s %s' % (e, self.website.__repr__()))
                 except AttributeError as e:
-                    dbg('!!!!!!!!!!!!%s has no title' % self.website)
+                    dbg('%s has no title' % self.website)
                 except ValueError as e:
                     dbg('############%s is url of unknown type' % self.website)
 
-
+        # 开启抓取企业和产品简介以及企业主页标题的线程
         self.thread = threading.Thread(target=per_thread, args=())
         self.thread.start()
-        # thread.join()
+        self.thread.join() # thread.join()的位置有待考虑
 
 
     def get_info_as_tuple(self):
-        self.thread.join()
+        """将对象所存内容按tuple打包后返回，方便插入excel或mysql"""
+        # self.thread.join() # 目前是惰性版本的求值方式，直到需要取值了才强行阻塞，但这样使得其他访问数据的方式变得不安全
         if self.website_title:
             return (
                 self.id,
@@ -103,13 +128,15 @@ class CorpItem(object):
                 self.website_title
             )
 
+
     def dump(self):
-        print self.id
-        print self.corp_name
-        print self.introduction
-        print self.product
-        print self.website
-        print self.website_title
+        """调试用代码，无视"""
+        print self.id.__repr__()
+        print self.corp_name.__repr__()
+        print self.introduction.__repr__()
+        print self.product.__repr__()
+        print self.website.__repr__()
+        print self.website_title.__repr__()
 
 
 
@@ -191,9 +218,83 @@ if __name__ == '__main__':
 </div>
 <div class="clear"></div>
 </li>'''
-    soup = BeautifulSoup(data)
+
+    dd = '''<li id="cur4266" class="cur">
+<div class="resultSummary" id="info4266">
+<div class="resultName">
+<h3>
+<input type="hidden" id="company_status4266" value="1">
+<a href="http://www.soqi.cn/detail/id_10AAKTNWVPO3.html" target="_blank" id="company_name_4266">北京<em><em>太阳</em></em><em><em>帆</em></em>科技开发公司</a>
+</h3>
+<span class="img">
+<img src="http://static.soqi.cn/images/rz.gif" id="exponent4266">
+<div class="audit_div">
+ 	<div class="audit_content1" id="audit_4266" style="display: none; ">高新技术企业</div>
+</div>
+</span>
+<div class="list_nav" id="trust_list_nav_4266" style="display: block; ">
+<!-- onclick="loadNacaoCompany('4266',false,false,true);return false;" -->
+		<a href="http://tool.soqi.cn/toolsDetail/10AAKTNWVPO3" title="点击查看工商档案" target="_blank" class="cleck c_1"></a>
+	</div>
+</div>
+<div class="l_r">
+<div class="l_r_mes">
+	<p style="color: #999">产品服务:
+    		太阳能及电热产品</p>
+    <ul>
+  <!--
+  	<li>联系人:
+	盛晓宏</li>
+	<li>电话:010-65780107 </li>
+    <li>传真:010-65780109</li>
+    <li>邮箱:<a style="margin: 0" href="mailto:mdwk@263.net">mdwk@263.net</a></li>
+ 	-->
+
+ 	<li>
+		<span title="北京市朝阳区马各庄北工业园">地址:
+		北京市朝阳区马各庄北工业园(100024)</span>
+ 	 </li>
+ 	</ul>
+  </div>
+  <div style="clear:both"></div>
+
+  	<cite>
+		收录:2010-01-01<a href="http://www.solar-sail.com" target="_blank">
+				http://www.solar-sail.com</a>
+		</cite>
+  </div>
+</div>
+<div class="h24" id="h244266" style="display: none; ">&nbsp;</div>
+<div class="list" id="list4266" style="display: block; ">
+<span class="relative" id="span_copy_info_4266">
+	<a href="#" onclick="copyToClipboard(4266);buttionClick('13');return false;">复制</a>
+</span>
+<span class="relative" id="importcrm10AAKTNWVPO3">
+<a href='javascript:AddToCRM("10AAKTNWVPO3")' onclick="buttionClick('9');">导入SoQiCRM</a>
+	</span>
+<span class="relative" id="correct_a4266">
+	<a href="javascript:loadWindow('','报错','4266')" onclick="buttionClick('11');">报错</a>
+</span>
+<span id="correct_span4266" style="display: none;" class="gray">报错</span>
+<!--
+<div class="l_ts" id="l_ts4266">
+<div class="l_point_div8" id="report_point4266">
+<p style="float:left">举报并纠正错误，可获得积分兑换礼品。</p>
+<div class="box_close2" onclick="closeErrorInfo()" style="cursor: pointer;" id="report_box_close4266">
+	<img onmouseover="this.src='http://static.soqi.cn/images/l_close.gif'" onmouseout="this.src='http://static.soqi.cn/images/l_close_gray.gif'" src="http://static.soqi.cn/images/l_close_gray.gif" />
+</div>
+</div>
+</div>
+ -->
+</div>
+<div class="clear"></div>
+</li>'''
+    soup = BeautifulSoup(dd)
 
     item = CorpItem(soup, 2, '100000')
 
     item.dump()
+
+    print item.introduction
+    print item.product
 
