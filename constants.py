@@ -1,5 +1,10 @@
 # encoding: utf-8
 
 
-SOQI_URL = 'http://www.soqi.cn/search?keywords=%s&search_type=0&city=100000&page=%s'
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/536.11 (KHTML, like Gecko) Chrome/20.0.1132.47 Safari/536.11',
+    'Host': 'www.soqi.cn',
+    'Referer': 'http://www.soqi.cn/'
+}
+
 
