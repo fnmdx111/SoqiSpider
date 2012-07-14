@@ -4,11 +4,11 @@ import functools
 from threading import Thread
 import threading
 import time
-from constants import headers
-from spider import grab, last_page_found
+from reaper import common, logger
+from reaper.constants import HEADERS
+from reaper.content_man import ContentManager
+from reaper.spider import grab
 from urllib3.connectionpool import HTTPConnectionPool
-from common import dbg
-
 
 the_lock = threading.RLock()
 
@@ -30,9 +30,9 @@ def _start_multi_threading(per_thread_func, per_thread_args):
 def start_multi_threading(
         keyword,
         (from_page, to_page),
+        content_man,
         city_code='100000',
         container=None,
-        func=lambda x: x.corp_name,
         max_retry=5,
         predicate=None,
         thread_num=20,
@@ -54,7 +54,7 @@ def start_multi_threading(
             return [iterable]
         return [iterable[i * by:(i + 1) * by] for i in range(len(iterable) / by  + (1 if len(iterable) % by != 0 else 0))]
 
-    conn_pool = HTTPConnectionPool(host=url, maxsize=thread_num, block=True, headers=headers)
+    conn_pool = HTTPConnectionPool(host=url, maxsize=thread_num, block=True, headers=HEADERS)
 
     retry = 1
 
@@ -66,7 +66,7 @@ def start_multi_threading(
         if retry > max_retry:
             break
 
-        dbg('remaining %s pages: %s, retry: %s' % (len(set_diff), sorted(set_diff), retry))
+        logger.info('remaining %s pages: %s, retry: %s', len(set_diff), sorted(set_diff), retry)
 
         grabbed_page_list = []
         def per_thread(*pages):
@@ -80,7 +80,6 @@ def start_multi_threading(
                 keyword,
                 pool=conn_pool,
                 pages=pages,
-                func=func,
                 city_code=city_code,
                 predicate=predicate
             )
@@ -89,6 +88,8 @@ def start_multi_threading(
                     grabbed_page_list.append(page)
                     if container:
                         container.extend(grabbed_items)
+                    content_man.register_objects(grabbed_items)
+
 
         # 平均分配任务，其中by的算法是对总数÷线程数之后向上取整，可以保证分配出的子方案数小于线程数
         amount = max(set_diff) - min(set_diff)
@@ -96,7 +97,7 @@ def start_multi_threading(
 
         # 对还剩下没抓的页面号进行分配
         per_thread_args = partition(list(set_diff), by=by)
-        dbg('allocated scheme %s' % per_thread_args)
+        logger.debug('allocated scheme %s', per_thread_args)
 
         _start_multi_threading(per_thread, per_thread_args)
 
@@ -104,13 +105,11 @@ def start_multi_threading(
         set_diff -= set(grabbed_page_list)
         retry += 1
 
-        if last_page_found:
-            # 如果找到了最后一页，且已抓到的页面号与未抓到的页面号的交集为空，表示已抓取完毕
-            #               已经抓下来了开始页数，到最后一页的页面
-            if not set(range(from_page, last_page_found + 1)) & set_diff:
-                break
+        if common.last_page_found:
+            # 如果找到了最后一页的页码，则将剩余页码中大于等于它的去掉
+            set_diff = set(filter(lambda x: x < common.last_page_found, set_diff))
 
-    dbg('escaped from while set_diff')
+    logger.debug('escaped from while set_diff')
 
     return container
 
@@ -118,13 +117,16 @@ def start_multi_threading(
 if __name__ == '__main__':
     def transact(item, file_obj):
         with the_lock:
-            item.dump()
-            print >> file_obj, item.corp_name, ",", item.id, ",", item.introduction, ",", item.website, ",", item.website_title
+            print >> file_obj, item.corp_name, ',', item.id, ',', item.introduction, ',', item.website, ',', item.website_title
+            file_obj.flush()
 
     with open(str(int(time.time() * 100)) + '.txt', 'w') as ff:
-        start_multi_threading("公司", (1, 5), max_retry=15, func=functools.partial(transact, file_obj=ff))
+        cont_man = ContentManager(functools.partial(transact, file_obj=ff))
+        start_multi_threading('公司', (1, 50), content_man=cont_man, max_retry=15)
 
+        cont_man.join_all()
 
+# TODO 解析城市编号和ui
 
 
 

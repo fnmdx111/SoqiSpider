@@ -2,11 +2,9 @@
 
 import urllib
 from bs4 import BeautifulSoup
-from common import dbg
-from corp_obj import CorpItem
-
-
-last_page_found = False
+from reaper.constants import REQUIRED_SUFFIXES
+from reaper.corp_obj import CorpItem
+from reaper import common, logger
 
 def _grab(keyword, page_number, pool, city_code='100000', predicate=None):
     """按照给定的参数进行抓取，必要时执行初步过滤
@@ -16,12 +14,15 @@ def _grab(keyword, page_number, pool, city_code='100000', predicate=None):
     city_code: 城市号
     predicate: 过滤所用的谓词
     返回: 过滤好的，所抓取的CorpItem对象列表"""
-    global last_page_found # 最后一页的页码
 
     if not predicate: # 默认的谓词检测公司名是否以keyword结尾，并且CorpItem对象要有主页（不一定可用）
-        predicate = lambda item: item.corp_name.endswith(keyword) and item.website
+        _p1 = lambda item: item.website and ('alibaba' not in item.website) and ('hc360' not in item.website)
+        if keyword in REQUIRED_SUFFIXES:
+            predicate = lambda item: _p1(item) and item.corp_name.endswith(keyword)
+        else:
+            predicate = lambda item: _p1(item)
 
-    dbg('retrieving %s of page %s' % (keyword, page_number))
+    logger.info('retrieving %s of page %s' % (keyword, page_number))
 
     values = {
         'city': city_code,
@@ -37,9 +38,6 @@ def _grab(keyword, page_number, pool, city_code='100000', predicate=None):
     # soqi.cn网页不标准，需要使用高级一点的解析工具
     soup = BeautifulSoup(response.data, 'lxml')
 
-    if soup.find_all(text='上一页') and not soup.find_all(text='下一页'):
-        last_page_found = page_number
-
     candidates = map(
         lambda raw: CorpItem(raw, page_number, city_code), # 将soup里的class为resultSummary的div转化为CorpItem对象
         filter(
@@ -50,20 +48,21 @@ def _grab(keyword, page_number, pool, city_code='100000', predicate=None):
                     'class': 'resultSummary'
                 })))
 
+    if len(candidates):
+        if not soup.find_all(text='下一页'):
+            logger.debug('last page found: %s', page_number)
+            common.last_page_found = page_number
+
     return (False if len(candidates) else True, # 可能会出现该页面非空，但是全部item都不和条件的情况
             filter(predicate, candidates))
 
 
-def grab(keyword, pool, pages, city_code='100000', func=None, predicate=None):
+def grab(keyword, pool, pages, city_code='100000', predicate=None):
     """对给定的页面列表（离散的）进行批量抓取（即调用_grab）
     抛出: 页面号，是否是空页面的变量，所抓取的CorpItem对象列表
     # 参数与_grab相同，略"""
     for page in pages:
         is_empty_page, grabbed = _grab(keyword, page, pool, city_code=city_code, predicate=predicate)
-
-        if func: # feeling funky lol
-            for item in grabbed:
-                func(item)
 
         yield page, is_empty_page, grabbed # 考虑到效率，提供收集完所有所需信息再写入的可能性
 

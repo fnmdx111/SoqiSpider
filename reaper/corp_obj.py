@@ -1,9 +1,9 @@
 # encoding: utf-8
 
 import threading
-from common import dbg
 from bs4 import BeautifulSoup
-from constants import headers, common_headers
+from reaper import logger
+from reaper.constants import HEADERS, COMMON_HEADERS
 from urllib3.connectionpool import HTTPConnectionPool
 import urllib2
 from urllib2 import URLError
@@ -12,7 +12,7 @@ import re
 class CorpItem(object):
     """对抓取的单个企业数据的集合，和一些常用方法的集合"""
 
-    _soqi_conn_pool = HTTPConnectionPool(host='www.soqi.cn', maxsize=50, block=True, headers=headers)
+    _soqi_conn_pool = HTTPConnectionPool(host='www.soqi.cn', maxsize=50, block=True, headers=HEADERS)
     id_pattern = re.compile(r'id_([0-9a-zA-Z]+)\.html$')
 
     def __init__(self, raw_content, page_num, city_id):
@@ -74,41 +74,51 @@ class CorpItem(object):
             return True
 
 
+    def __getattr__(self, item):
+        if item in ['introduction', 'product', 'website_title']:
+            if self.thread.is_alive:
+                self.thread.join()
+        return self.__getattribute__('_' + item)
+
+
     def extract_info(self, raw_content):
         """根据raw_content抽取所需要的信息
         raw_content: 略
         返回: 无"""
         self.id_page = ''
-        self.id, self.corp_name = CorpItem.get_corp_id_and_name(raw_content, self)
-        self.id = self.city_id + '_' + self.id
-        self.website = CorpItem.get_corp_link(raw_content)
-        self.website_title = ''
-        self.product = ''
-        self.introduction = ''
+        self._id, self._corp_name = CorpItem.get_corp_id_and_name(raw_content, self)
+        self._id = self.city_id + '_' + self._id
+        self._website = CorpItem.get_corp_link(raw_content)
+        self._website_title = ''
+        self._product = ''
+        self._introduction = ''
 
         def per_thread():
             """略"""
-            if self.website:
+            if self._website:
+                if 'hc360' in self._website or 'alibaba' in self._website:
+                    return
+
                 try:
-                    request = urllib2.Request(self.website, headers=common_headers)
+                    request = urllib2.Request(self._website, headers=COMMON_HEADERS)
                     response = urllib2.urlopen(request)
-                    dbg('connecting %s' % self.website)
+                    logger.info('connecting %s' % self._website)
                     if response:
-                        self.website_title = BeautifulSoup(response.read(), 'lxml').head.title.get_text().encode('utf-8')
+                        self._website_title = BeautifulSoup(response.read(), 'lxml').head.title.get_text().encode('utf-8')
+                        if not self._website_title:
+                            return
+                    else:
+                        return
 
-                except URLError as e:
-                    dbg('%s %s' % (e, self.website.__repr__()))
-                except AttributeError as e:
-                    dbg('%s has no title' % self.website)
-                except ValueError as e:
-                    dbg('%s is url of unknown type' % self.website if self.website else 'n/a')
-
-                try:
                     response = CorpItem._soqi_conn_pool.request('GET', self.id_page)
                     if response:
-                        self.introduction, self.product = CorpItem.get_corp_intro_and_product(BeautifulSoup(response.data, 'lxml'))
+                        self._introduction, self._product = CorpItem.get_corp_intro_and_product(BeautifulSoup(response.data, 'lxml'))
                 except URLError as e:
-                    dbg('%s %s' % (e, self.website.__repr__()))
+                    logger.warning('%s %s', e, self._website.__repr__())
+                except AttributeError as e:
+                    logger.info('%s has no title', self._website)
+                except ValueError as e:
+                    logger.warning('%s is url of unknown type', self._website if self._website else 'n/a')
 
         # 开启抓取企业和产品简介以及企业主页标题的线程
         self.thread = threading.Thread(target=per_thread, args=())
@@ -365,12 +375,7 @@ if __name__ == '__main__':
 
     item = CorpItem(soup, 2, '100000')
 
-    item.dump()
-
-    print item.introduction
-    print item.product
-
-    with open('text.txt', 'w') as f:
-        print >> f, item.introduction
-        print >> f, item.product
+    print 'w', item.website_title
+    print 'i', item.introduction
+    print 'p', item.product
 
