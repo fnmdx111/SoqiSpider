@@ -64,7 +64,7 @@
       <file leaf-file-name="corp_obj.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/corp_obj.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="66" column="0" selection-start="1886" selection-end="1886" vertical-scroll-proportion="0.31322506">
+            <state line="87" column="0" selection-start="2484" selection-end="2484" vertical-scroll-proportion="0.12145749">
               <folding />
             </state>
           </provider>
@@ -73,7 +73,7 @@
       <file leaf-file-name="text.txt" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/text.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="8" column="0" selection-start="799" selection-end="799" vertical-scroll-proportion="0.0">
+            <state line="2" column="0" selection-start="2" selection-end="2" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -117,8 +117,8 @@
         <option value="$PROJECT_DIR$/spider.py" />
         <option value="$PROJECT_DIR$/grab.py" />
         <option value="$PROJECT_DIR$/constants.py" />
-        <option value="$PROJECT_DIR$/corp_obj.py" />
         <option value="$PROJECT_DIR$/a.js" />
+        <option value="$PROJECT_DIR$/corp_obj.py" />
       </list>
     </option>
   </component>
@@ -189,10 +189,10 @@
   <component name="PropertiesComponent">
     <property name="options.splitter.main.proportions" value="0.3" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="recentsLimit" value="5" />
     <property name="options.lastSelected" value="reference.settingsdialog.IDE.editor.colors.Python" />
-    <property name="options.searchVisible" value="true" />
+    <property name="recentsLimit" value="5" />
     <property name="options.splitter.details.proportions" value="0.2" />
+    <property name="options.searchVisible" value="true" />
   </component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
@@ -387,7 +387,11 @@
       <created>1342203267357</created>
       <updated>1342203267357</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="minor bug fix">
+      <created>1342267823216</created>
+      <updated>1342267823216</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -399,8 +403,8 @@
       <window_info id="Regex Tester" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.2039758" sideWeight="0.670282" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3991323" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.20743302" sideWeight="0.6008677" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.3991323" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="8" side_tool="true" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.48264644" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -475,6 +479,10 @@
           <url>file://$PROJECT_DIR$/corp_obj.py</url>
           <line>67</line>
         </line-breakpoint>
+        <line-breakpoint enabled="true" type="python-line">
+          <url>file://$PROJECT_DIR$/corp_obj.py</url>
+          <line>92</line>
+        </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>
@@ -526,7 +534,9 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/text.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="8" column="0" selection-start="799" selection-end="799" vertical-scroll-proportion="0.0" />
+        <state line="2" column="0" selection-start="2" selection-end="2" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/134225656921.txt">
@@ -541,7 +551,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/corp_obj.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="66" column="0" selection-start="1886" selection-end="1886" vertical-scroll-proportion="0.31322506">
+        <state line="87" column="0" selection-start="2484" selection-end="2484" vertical-scroll-proportion="0.12145749">
           <folding />
         </state>
       </provider>

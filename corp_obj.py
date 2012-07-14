@@ -95,19 +95,20 @@ class CorpItem(object):
                     dbg('connecting %s' % self.website)
                     if response:
                         self.website_title = BeautifulSoup(response.read(), 'lxml').head.title.get_text().encode('utf-8')
-                    else:
-                        return
-                    if not self.website_title:
-                        return
 
-                    response = CorpItem._soqi_conn_pool.request('GET', self.id_page)
-                    self.introduction, self.product = CorpItem.get_corp_intro_and_product(BeautifulSoup(response.data, 'lxml'))
                 except URLError as e:
                     dbg('%s %s' % (e, self.website.__repr__()))
                 except AttributeError as e:
                     dbg('%s has no title' % self.website)
                 except ValueError as e:
-                    dbg('############%s is url of unknown type' % self.website)
+                    dbg('%s is url of unknown type' % self.website if self.website else 'n/a')
+
+                try:
+                    response = CorpItem._soqi_conn_pool.request('GET', self.id_page)
+                    if response:
+                        self.introduction, self.product = CorpItem.get_corp_intro_and_product(BeautifulSoup(response.data, 'lxml'))
+                except URLError as e:
+                    dbg('%s %s' % (e, self.website.__repr__()))
 
         # 开启抓取企业和产品简介以及企业主页标题的线程
         self.thread = threading.Thread(target=per_thread, args=())
@@ -289,7 +290,78 @@ if __name__ == '__main__':
 </div>
 <div class="clear"></div>
 </li>'''
-    soup = BeautifulSoup(dd)
+    ppp = '''<li id="cur4226" class="cur">
+<div class="resultSummary" id="info4226">
+<div class="resultName">
+<h3>
+<input type="hidden" id="company_status4226" value="1">
+<a href="http://www.soqi.cn/detail/id_1082EMBG0Z2T.html" target="_blank" id="company_name_4226"><em><em>巴</em></em><em><em>克</em></em><em><em>约</em></em><em><em>根</em></em><em><em>森</em></em>风机(宁波)有限公司</a>
+</h3>
+<span class="img">
+<div class="audit_div">
+ 	<div class="audit_content1" id="audit_4226" style="display:none;"></div>
+</div>
+</span>
+<div class="list_nav" id="trust_list_nav_4226" style="display: block; ">
+<!-- onclick="loadNacaoCompany('4226',false,false,true);return false;" -->
+		<a href="http://tool.soqi.cn/toolsDetail/1082EMBG0Z2T" title="点击查看工商档案" target="_blank" class="cleck c_1"></a>
+	</div>
+</div>
+<div class="l_r">
+<div class="l_r_mes">
+	<p style="color: #999">产品服务:
+    		风机,离心风机,鼓风机,引风机,锅炉风机,进口风机,通风机,...
+    			</p>
+    <ul>
+  <!--
+  	<li>联系人:
+	Jan&#x20;Berg</li>
+	<li>电话:0574-86306780</li>
+    <li>传真:0574-86306782</li>
+    <li>
+    	手机:13738464168</li>
+    -->
+
+ 	<li>
+		<span title="浙江宁波市镇海区北欧工业园区金川路66号">地址:
+		浙江宁波市镇海区北欧工业园区金川路66号(315221)</span>
+ 	 </li>
+ 	</ul>
+  </div>
+  <div style="clear:both"></div>
+
+  	<cite>
+		收录:2010-01-01<a href="http://www.nbbarker.com.cn" target="_blank">
+				http://www.nbbarker.com.cn</a>
+		</cite>
+  </div>
+</div>
+<div class="h24" id="h244226" style="display: none; ">&nbsp;</div>
+<div class="list" id="list4226" style="">
+<span class="relative" id="span_copy_info_4226">
+	<a href="#" onclick="copyToClipboard(4226);buttionClick('13');return false;">复制</a>
+</span>
+<span class="relative" id="importcrm1082EMBG0Z2T">
+<a href='javascript:AddToCRM("1082EMBG0Z2T")' onclick="buttionClick('9');">导入SoQiCRM</a>
+	</span>
+<span class="relative" id="correct_a4226">
+	<a href="javascript:loadWindow('','报错','4226')" onclick="buttionClick('11');">报错</a>
+</span>
+<span id="correct_span4226" style="display: none;" class="gray">报错</span>
+<!--
+<div class="l_ts" id="l_ts4226">
+<div class="l_point_div8" id="report_point4226">
+<p style="float:left">举报并纠正错误，可获得积分兑换礼品。</p>
+<div class="box_close2" onclick="closeErrorInfo()" style="cursor: pointer;" id="report_box_close4226">
+	<img onmouseover="this.src='http://static.soqi.cn/images/l_close.gif'" onmouseout="this.src='http://static.soqi.cn/images/l_close_gray.gif'" src="http://static.soqi.cn/images/l_close_gray.gif" />
+</div>
+</div>
+</div>
+ -->
+</div>
+<div class="clear"></div>
+</li>'''
+    soup = BeautifulSoup(ppp)
 
     item = CorpItem(soup, 2, '100000')
 
