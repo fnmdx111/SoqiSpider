@@ -65,7 +65,7 @@ class CorpItem(object):
                 text=name.decode('utf-8')
             )[0].next_sibling.next_sibling.get_text().encode('utf-8').lstrip().rstrip()
 
-        return extractor('产品及服务'), extractor('公司简介')
+        return extractor('公司简介'), extractor('产品及服务')
 
 
     def is_valid_item(self):
@@ -133,7 +133,7 @@ class CorpItem(object):
         """调试用代码，无视"""
         print self.id.__repr__()
         print self.corp_name.__repr__()
-        print self.introduction.__repr__()
+        print self.introduction
         print self.product.__repr__()
         print self.website.__repr__()
         print self.website_title.__repr__()
@@ -297,4 +297,8 @@ if __name__ == '__main__':
 
     print item.introduction
     print item.product
+
+    with open('text.txt', 'w') as f:
+        print >> f, item.introduction
+        print >> f, item.product
 
