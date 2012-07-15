@@ -75,17 +75,18 @@ class Form(QDialog, object):
                     print >> file_obj, item.corp_name, ',', item.website_title, ',', item.introduction
                     file_obj.flush()
 
-            cont_man = ContentManager(functools.partial(transact, file_obj=ff))
+            cont_man = ContentManager(functools.partial(transact, file_obj=file_obj))
             start_multi_threading('厂', (1, 50), content_man=cont_man, max_retry=15, logger=self.logger)
 
             cont_man.join_all()
             self.emit(SIGNAL('jobFinished()'))
 
-
+# FIXME fix `problem: I/O operation on closed file`, probable solution: use external func
         with open(str(int(time.time() * 100)) + '.txt', 'w') as ff:
             self.transactor_thread = threading.Thread(target=_, args=(ff,))
             self.transactor_thread.setDaemon(True)
             self.transactor_thread.start()
+            self.join()
 
 
 
