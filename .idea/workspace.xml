@@ -503,7 +503,11 @@
       <created>1342367905664</created>
       <updated>1342367905664</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="simple gui, file handling still has problems">
+      <created>1342367946022</created>
+      <updated>1342367946022</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
