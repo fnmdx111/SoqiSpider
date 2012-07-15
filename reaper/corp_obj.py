@@ -22,8 +22,8 @@ class CorpItem(object):
         city_id: 被抓去到的城市号"""
         self.page_num = page_num
         self.city_id = city_id
-
-        self.extract_info(raw_content)
+        self.raw = raw_content
+        self.extracted = False
 
 
     @staticmethod
@@ -50,7 +50,7 @@ class CorpItem(object):
         cite = li.find_all(name='cite')[0]
 
         if cite.find(name='a'):
-            return ''.join(cite.a.get('href').split())
+            return ''.join(cite.a.get('href').split()).encode('utf-8')
         else:
             return ''
 
@@ -71,14 +71,24 @@ class CorpItem(object):
     def is_valid_item(self):
         """根据企业主页地址判断是否是合法的对象（没用主页的一律抛弃）"""
         if self.website:
-            return True
+            if self.website_title:
+                return True
+
+        return False
 
 
     def __getattr__(self, item):
+        """因为CorpItem为部分惰性加载的原因，需要对不是惰性加载的属性做标记"""
+        if not self.extracted:
+            self.extracted = True
+            self.extract_info(self.raw)
+
         if item in ['introduction', 'product', 'website_title']:
             if self.thread.is_alive:
                 self.thread.join()
-        return self.__getattribute__('_' + item)
+            return self.__getattribute__('_' + item)
+        else:
+            return self.__getattribute__(item)
 
 
     def extract_info(self, raw_content):
@@ -86,23 +96,23 @@ class CorpItem(object):
         raw_content: 略
         返回: 无"""
         self.id_page = ''
-        self._id, self._corp_name = CorpItem.get_corp_id_and_name(raw_content, self)
-        self._id = self.city_id + '_' + self._id
-        self._website = CorpItem.get_corp_link(raw_content)
+        self.id, self.corp_name = CorpItem.get_corp_id_and_name(raw_content, self)
+        self.id = self.city_id + '_' + self.id
+        self.website = CorpItem.get_corp_link(raw_content)
         self._website_title = ''
         self._product = ''
         self._introduction = ''
 
         def per_thread():
             """略"""
-            if self._website:
-                if 'hc360' in self._website or 'alibaba' in self._website:
+            if self.website:
+                if 'hc360' in self.website or 'alibaba' in self.website:
                     return
 
                 try:
-                    request = urllib2.Request(self._website, headers=COMMON_HEADERS)
+                    request = urllib2.Request(self.website, headers=COMMON_HEADERS)
                     response = urllib2.urlopen(request)
-                    logger.info('connecting %s' % self._website)
+                    logger.info('connecting %s' % self.website)
                     if response:
                         self._website_title = BeautifulSoup(response.read(), 'lxml').head.title.get_text().encode('utf-8')
                         if not self._website_title:
@@ -114,11 +124,13 @@ class CorpItem(object):
                     if response:
                         self._introduction, self._product = CorpItem.get_corp_intro_and_product(BeautifulSoup(response.data, 'lxml'))
                 except URLError as e:
-                    logger.warning('%s %s', e, self._website.__repr__())
+                    logger.warning('%s %s', e, self.website.__repr__())
                 except AttributeError as e:
-                    logger.info('%s has no title', self._website)
+                    logger.info('%s has no title', self.website)
                 except ValueError as e:
-                    logger.warning('%s is url of unknown type', self._website if self._website else 'n/a')
+                    logger.warning('%s is url of unknown type', self.website if self.website else 'n/a')
+                finally:
+                    del self.raw
 
         # 开启抓取企业和产品简介以及企业主页标题的线程
         self.thread = threading.Thread(target=per_thread, args=())
@@ -371,11 +383,12 @@ if __name__ == '__main__':
 </div>
 <div class="clear"></div>
 </li>'''
-    soup = BeautifulSoup(ppp)
+    soup = BeautifulSoup(dd)
 
     item = CorpItem(soup, 2, '100000')
 
-    print 'w', item.website_title
-    print 'i', item.introduction
-    print 'p', item.product
+    if item.is_valid_item():
+        print 'w', item.website_title
+        print 'i', item.introduction
+        print 'p', item.product
 

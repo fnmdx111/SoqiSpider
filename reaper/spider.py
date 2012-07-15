@@ -4,9 +4,9 @@ import urllib
 from bs4 import BeautifulSoup
 from reaper.constants import REQUIRED_SUFFIXES
 from reaper.corp_obj import CorpItem
-from reaper import common, logger
+from reaper import common
 
-def _grab(keyword, page_number, pool, city_code='100000', predicate=None):
+def _grab(keyword, page_number, pool, city_code='100000', logger=None, predicate=None):
     """按照给定的参数进行抓取，必要时执行初步过滤
     keyword: 给定的关键字
     page_number: 页数
@@ -57,12 +57,12 @@ def _grab(keyword, page_number, pool, city_code='100000', predicate=None):
             filter(predicate, candidates))
 
 
-def grab(keyword, pool, pages, city_code='100000', predicate=None):
+def grab(keyword, pool, pages, city_code='100000', logger=None, predicate=None):
     """对给定的页面列表（离散的）进行批量抓取（即调用_grab）
     抛出: 页面号，是否是空页面的变量，所抓取的CorpItem对象列表
     # 参数与_grab相同，略"""
     for page in pages:
-        is_empty_page, grabbed = _grab(keyword, page, pool, city_code=city_code, predicate=predicate)
+        is_empty_page, grabbed = _grab(keyword, page, pool, city_code=city_code, logger=logger, predicate=predicate)
 
         yield page, is_empty_page, grabbed # 考虑到效率，提供收集完所有所需信息再写入的可能性
 
