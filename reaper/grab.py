@@ -5,6 +5,7 @@ from threading import Thread
 import threading
 import time
 from reaper import common, logger
+import reaper
 from reaper.constants import HEADERS
 from reaper.content_man import ContentManager
 from reaper.spider import grab
@@ -31,6 +32,7 @@ def start_multi_threading(
         keyword,
         (from_page, to_page),
         content_man,
+        logger=None,
         city_code='100000',
         container=None,
         max_retry=5,
@@ -81,6 +83,7 @@ def start_multi_threading(
                 pool=conn_pool,
                 pages=pages,
                 city_code=city_code,
+                logger=logger,
                 predicate=predicate
             )
             for page, is_empty_page, grabbed_items in grabber:
@@ -116,17 +119,19 @@ def start_multi_threading(
 
 if __name__ == '__main__':
     def transact(item, file_obj):
+        if not item.is_valid_item():
+            return
         with the_lock:
             print >> file_obj, item.corp_name, ',', item.id, ',', item.introduction, ',', item.website, ',', item.website_title
             file_obj.flush()
 
     with open(str(int(time.time() * 100)) + '.txt', 'w') as ff:
         cont_man = ContentManager(functools.partial(transact, file_obj=ff))
-        start_multi_threading('公司', (1, 50), content_man=cont_man, max_retry=15)
+        start_multi_threading('公司', (1, 50), content_man=cont_man, max_retry=15, logger=reaper.logger)
 
         cont_man.join_all()
 
-# TODO 解析城市编号和ui
+# TODO ui
 
 
 
