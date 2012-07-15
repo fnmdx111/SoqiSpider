@@ -4,7 +4,7 @@ import functools
 from threading import Thread
 import threading
 import time
-from reaper import common, logger
+from reaper import common
 import reaper
 from reaper.constants import HEADERS
 from reaper.content_man import ContentManager
