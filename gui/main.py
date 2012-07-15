@@ -15,6 +15,16 @@ logging.basicConfig(
     level=logging.INFO
 )
 
+class Parameters(object):
+    def __init__(self, keyword, (from_page, to_page), city_id):
+        self.keyword = keyword
+        self.from_page, self.to_page = from_page, to_page
+        self.city_id = city_id
+
+
+    def __str__(self):
+        return ' '.join(map(str, [self.keyword, self.from_page, self.to_page, self.city_id]))
+
 
 class Form(QDialog, object):
     def __init__(self, parent=None):
@@ -40,12 +50,24 @@ class Form(QDialog, object):
         self.logger.addHandler(handler)
 
         self.connect(self.btn_start, SIGNAL('clicked()'), self.btn_start_click)
-        # self.connect(self.logger_widget)
+        self.connect(self.logger_widget, SIGNAL('newLog(QString)'), self.new_log)
+        self.connect(self, SIGNAL('jobFinished()'), self.grabbing_finished)
+
+        self._param = Parameters('公司', (1, 50), '100000')
+
+
+    def grabbing_finished(self):
+        self.logger_widget.append('job %s done' % self._param)
+
+
+    def new_log(self, s):
+        self.logger_widget.append(s)
 
 
     def btn_start_click(self):
         the_lock = threading.RLock()
-        def _():
+        from_id, to_id = '123456', '234567'
+        def _(file_obj):
             def transact(item, file_obj):
                 if not item.is_valid_item():
                     return
@@ -53,15 +75,17 @@ class Form(QDialog, object):
                     print >> file_obj, item.corp_name, ',', item.website_title, ',', item.introduction
                     file_obj.flush()
 
-            with open(str(int(time.time() * 100)) + '.txt', 'w') as ff:
-                cont_man = ContentManager(functools.partial(transact, file_obj=ff))
-                start_multi_threading('公司', (1, 50), content_man=cont_man, max_retry=15, logger=self.logger)
+            cont_man = ContentManager(functools.partial(transact, file_obj=ff))
+            start_multi_threading('厂', (1, 50), content_man=cont_man, max_retry=15, logger=self.logger)
 
-                # cont_man.join_all()
+            cont_man.join_all()
+            self.emit(SIGNAL('jobFinished()'))
 
-        # _()
-        self.transactor_thread = threading.Thread(target=_)
-        self.transactor_thread.start()
+
+        with open(str(int(time.time() * 100)) + '.txt', 'w') as ff:
+            self.transactor_thread = threading.Thread(target=_, args=(ff,))
+            self.transactor_thread.setDaemon(True)
+            self.transactor_thread.start()
 
 
 

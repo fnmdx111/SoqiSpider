@@ -15,7 +15,7 @@ class CorpItem(object):
     _soqi_conn_pool = HTTPConnectionPool(host='www.soqi.cn', maxsize=50, block=True, headers=HEADERS)
     id_pattern = re.compile(r'id_([0-9a-zA-Z]+)\.html$')
 
-    def __init__(self, raw_content, page_num, city_id):
+    def __init__(self, raw_content, page_num, city_id, logger=logger):
         """构造函数
         raw_content: bs4里的对象，根节点应为<li>
         page_num: 被抓取到的页数
@@ -23,6 +23,7 @@ class CorpItem(object):
         self.page_num = page_num
         self.city_id = city_id
         self.raw = raw_content
+        self.logger = logger
         self.extracted = False
 
 
@@ -112,7 +113,7 @@ class CorpItem(object):
                 try:
                     request = urllib2.Request(self.website, headers=COMMON_HEADERS)
                     response = urllib2.urlopen(request)
-                    logger.info('connecting %s' % self.website)
+                    self.logger.info('connecting %s' % self.website)
                     if response:
                         self._website_title = BeautifulSoup(response.read(), 'lxml').head.title.get_text().encode('utf-8')
                         if not self._website_title:
@@ -124,11 +125,11 @@ class CorpItem(object):
                     if response:
                         self._introduction, self._product = CorpItem.get_corp_intro_and_product(BeautifulSoup(response.data, 'lxml'))
                 except URLError as e:
-                    logger.warning('%s %s', e, self.website.__repr__())
+                    self.logger.warning('%s %s', e, self.website.__repr__())
                 except AttributeError as e:
-                    logger.info('%s has no title', self.website)
+                    self.logger.info('%s has no title', self.website)
                 except ValueError as e:
-                    logger.warning('%s is url of unknown type', self.website if self.website else 'n/a')
+                    self.logger.warning('%s is url of unknown type', self.website if self.website else 'n/a')
                 finally:
                     del self.raw
 
