@@ -10,8 +10,11 @@ from reaper.constants import HEADERS
 from reaper.content_man import ContentManager
 from reaper.spider import grab
 from urllib3.connectionpool import HTTPConnectionPool
+from pyExcelerator import *
 
 the_lock = threading.RLock()
+
+
 
 def _start_multi_threading(per_thread_func, per_thread_args):
     """启动线程的函数
@@ -116,22 +119,40 @@ def start_multi_threading(
 
     return container
 
+#TODO Insert MYSQL and EXCEL
+def initExcel(worksheet):
+    xls_headers=[u"公司名",u"公司ID编码",u"公司简介",u"公司主要产品",u"公司网站",u"公司网站标题"]
+    for i in range(0,6):
+        worksheet.write(0,i,xls_headers[i])
+    return
+
+def insertToExcel(worksheet,row,item):
+    items=item.get_info_as_tuple()
+    for i in range(0,6):
+        worksheet.write(row,i,str(items[i]).decode('utf-8'))
 
 if __name__ == '__main__':
+    row=0
     def transact(item, file_obj):
+        global row
         if not item.is_valid_item():
             return
         with the_lock:
-            print >> file_obj, item.corp_name, ',', item.id, ',', item.introduction, ',', item.website, ',', item.website_title
+            #print >> file_obj, item.corp_name, ',', item.id, ',', item.introduction, ',', item.website, ',', item.website_title
+            #row控制写入行数
+            row+=1
+            insertToExcel(ws,row,item)
+            file_obj.write(item.corp_name+"\n       ID:"+item.id+"\n       公司简介:"+item.introduction+"\n       主要产品关键词:"+item.product+"\n       网址:"+item.website+"\n       网址标题:"+item.website_title+'\n')
             file_obj.flush()
-
+    #初始化要写入的表格
+    w=Workbook()
+    ws = w.add_sheet('CompanyInformation')
+    initExcel(ws)
     with open(str(int(time.time() * 100)) + '.txt', 'w') as ff:
         cont_man = ContentManager(functools.partial(transact, file_obj=ff))
-        start_multi_threading('公司', (1, 50), content_man=cont_man, max_retry=15, logger=reaper.logger)
-
+        start_multi_threading('公司', (1, 5),thread_num=10,content_man=cont_man, max_retry=15, logger=reaper.logger)
         cont_man.join_all()
-
+        w.save("output.xls")
 # TODO ui
-
 
 
