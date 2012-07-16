@@ -6,6 +6,7 @@ import threading
 import time
 from reaper import common
 import reaper
+from reaper.common import partition
 from reaper.constants import HEADERS
 from reaper.content_man import ContentManager
 from reaper.spider import grab
@@ -53,11 +54,6 @@ def start_multi_threading(
     url: 创建连接池所用的host
     返回: 装载了所抓取的CorpItem对象的container
     其他同_grab，略"""
-    def partition(iterable, by=10):
-        """按每by个把iterable分成若干组"""
-        if not by:
-            return [iterable]
-        return [iterable[i * by:(i + 1) * by] for i in range(len(iterable) / by  + (1 if len(iterable) % by != 0 else 0))]
 
     conn_pool = HTTPConnectionPool(host=url, maxsize=thread_num, block=True, headers=HEADERS)
 
@@ -67,6 +63,7 @@ def start_multi_threading(
     set_all = set(range_all)
     set_diff = set_all
 
+    # TODO add estimation of the amount of the items
     while set_diff:
         if retry > max_retry:
             break
@@ -88,7 +85,7 @@ def start_multi_threading(
                 city_code=city_code,
                 logger=logger,
                 predicate=predicate
-            )
+            ) # 注意grabber是一个生成器
             for page, is_empty_page, grabbed_items in grabber:
                 if not is_empty_page:
                     grabbed_page_list.append(page)
