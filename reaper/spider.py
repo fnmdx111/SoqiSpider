@@ -39,7 +39,7 @@ def _grab(keyword, page_number, pool, city_code='100000', logger=None, predicate
     soup = BeautifulSoup(response.data, 'lxml')
 
     candidates = map(
-        lambda raw: CorpItem(raw, page_number, city_code), # 将soup里的class为resultSummary的div转化为CorpItem对象
+        lambda raw: CorpItem(raw, page_number, city_code, logger=logger), # 将soup里的class为resultSummary的div转化为CorpItem对象
         filter(
             lambda x: x.has_attr('id'),
             soup.find_all(

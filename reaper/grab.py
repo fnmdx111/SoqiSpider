@@ -4,7 +4,7 @@ import functools
 from threading import Thread
 import threading
 import time
-from reaper import common, logger
+from reaper import common
 import reaper
 from reaper.constants import HEADERS
 from reaper.content_man import ContentManager
@@ -150,9 +150,8 @@ if __name__ == '__main__':
     initExcel(ws)
     with open(str(int(time.time() * 100)) + '.txt', 'w') as ff:
         cont_man = ContentManager(functools.partial(transact, file_obj=ff))
-        start_multi_threading('公司', (1, 50),thread_num=50,content_man=cont_man, max_retry=15, logger=reaper.logger)
+        start_multi_threading('公司', (1, 5),thread_num=10,content_man=cont_man, max_retry=15, logger=reaper.logger)
         cont_man.join_all()
         w.save("output.xls")
 # TODO ui
-
 
