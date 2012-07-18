@@ -4,7 +4,7 @@ import urllib
 from bs4 import BeautifulSoup
 from reaper.constants import REQUIRED_SUFFIXES
 from reaper.corp_obj import CorpItem
-from reaper import common
+from reaper import misc
 
 def _grab(keyword, page_number, pool, city_code='100000', logger=None, predicate=None):
     """按照给定的参数进行抓取，必要时执行初步过滤
@@ -51,7 +51,7 @@ def _grab(keyword, page_number, pool, city_code='100000', logger=None, predicate
     if len(candidates):
         if not soup.find_all(text='下一页'):
             logger.debug('last page found: %s', page_number)
-            common.last_page_found = page_number
+            misc.last_page_found = page_number
 
     return (False if len(candidates) else True, # 可能会出现该页面非空，但是全部item都不和条件的情况
             filter(predicate, candidates))
@@ -65,6 +65,5 @@ def grab(keyword, pool, pages, city_code='100000', logger=None, predicate=None):
         is_empty_page, grabbed = _grab(keyword, page, pool, city_code=city_code, logger=logger, predicate=predicate)
 
         yield page, is_empty_page, grabbed # 考虑到效率，提供收集完所有所需信息再写入的可能性
-
 
 

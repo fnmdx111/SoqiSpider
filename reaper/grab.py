@@ -4,9 +4,9 @@ import functools
 from threading import Thread
 import threading
 import time
-from reaper import common
+from reaper import misc
 import reaper
-from reaper.common import partition
+from reaper.misc import partition
 from reaper.constants import HEADERS
 from reaper.content_man import ContentManager
 from reaper.spider import grab
@@ -109,9 +109,9 @@ def start_multi_threading(
         set_diff -= set(grabbed_page_list)
         retry += 1
 
-        if common.last_page_found:
+        if misc.last_page_found:
             # 如果找到了最后一页的页码，则将剩余页码中大于等于它的去掉
-            set_diff = set(filter(lambda x: x < common.last_page_found, set_diff))
+            set_diff = set(filter(lambda x: x < misc.last_page_found, set_diff))
 
     logger.debug('escaped from while set_diff')
 

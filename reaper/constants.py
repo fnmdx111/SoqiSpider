@@ -1,8 +1,11 @@
 # encoding: utf-8
+import re
 
 
 AUTO = 0xffff
 
+
+PATTERN_ITEM_AMOUNT = re.compile(r'(\d+)')
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/536.11 (KHTML, like Gecko) Chrome/20.0.1132.47 Safari/536.11',

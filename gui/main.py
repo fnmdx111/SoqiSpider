@@ -6,7 +6,7 @@ from PyQt4.QtCore import *
 import sys
 import time
 from gui.misc import LoggerHandler, ParameterSet, _THREAD_AMOUNT_SAFE
-from reaper.common import take
+from reaper.misc import take
 from reaper.constants import REQUIRED_SUFFIXES, AUTO
 from reaper.content_man import ContentManager
 from reaper.grab import start_multi_threading

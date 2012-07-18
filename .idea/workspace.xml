@@ -2,16 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="7ca28858-e9a5-4619-a81a-c9693fe37f51" name="Default" comment="">
-      <change type="DELETED" beforePath="D:\workspace\SoqiSpider\MySQL-python-1.2.3.win32-py2.7.exe" afterPath="" />
-      <change type="DELETED" beforePath="D:\workspace\SoqiSpider\common.py" afterPath="" />
-      <change type="DELETED" beforePath="D:\workspace\SoqiSpider\constants.py" afterPath="" />
-      <change type="DELETED" beforePath="D:\workspace\SoqiSpider\corp_obj.py" afterPath="" />
-      <change type="DELETED" beforePath="D:\workspace\SoqiSpider\grab.py" afterPath="" />
-      <change type="DELETED" beforePath="D:\workspace\SoqiSpider\pyexcelerator-0.6.4.1.zip" afterPath="" />
-      <change type="DELETED" beforePath="D:\workspace\SoqiSpider\spider.py" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/SoqiSpider.iml" afterPath="$PROJECT_DIR$/.idea/SoqiSpider.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/reaper/misc.py" />
+      <change type="DELETED" beforePath="D:\workspace\SoqiSpider\reaper\common.py" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/gui/main.py" afterPath="$PROJECT_DIR$/gui/main.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/reaper/constants.py" afterPath="$PROJECT_DIR$/reaper/constants.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/reaper/grab.py" afterPath="$PROJECT_DIR$/reaper/grab.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/reaper/spider.py" afterPath="$PROJECT_DIR$/reaper/spider.py" />
     </list>
     <ignored path="SoqiSpider.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -36,7 +33,7 @@
             <file leaf-file-name="spider.py" pinned="false" current="true" current-in-tab="true">
               <entry file="file://$PROJECT_DIR$/reaper/spider.py">
                 <provider selected="true" editor-type-id="text-editor">
-                  <state line="60" column="29" selection-start="1986" selection-end="1986" vertical-scroll-proportion="0.362776">
+                  <state line="60" column="29" selection-start="1982" selection-end="1982" vertical-scroll-proportion="0.362776">
                     <folding />
                   </state>
                 </provider>
@@ -52,19 +49,10 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="grab.py" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="grab.py" pinned="false" current="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/reaper/grab.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="24" column="0" selection-start="572" selection-end="572" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="common.py" pinned="false" current="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/reaper/common.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="9" column="0" selection-start="119" selection-end="119" vertical-scroll-proportion="0.389049">
+            <state line="24" column="0" selection-start="568" selection-end="568" vertical-scroll-proportion="0.043227665">
               <folding />
             </state>
           </provider>
@@ -82,7 +70,7 @@
       <file leaf-file-name="constants.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/reaper/constants.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="15" column="0" selection-start="382" selection-end="382" vertical-scroll-proportion="0.0">
+            <state line="19" column="0" selection-start="437" selection-end="437" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -100,7 +88,7 @@
       <file leaf-file-name="main.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/gui/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="196" column="0" selection-start="6651" selection-end="6651" vertical-scroll-proportion="0.0">
+            <state line="196" column="0" selection-start="6649" selection-end="6649" vertical-scroll-proportion="0.0">
               <folding>
                 <element signature="e#18#32#0" expanded="true" />
               </folding>
@@ -130,7 +118,6 @@
         <option value="$PROJECT_DIR$/reaper/id_gen.py" />
         <option value="$PROJECT_DIR$/gui/logger_handler.py" />
         <option value="$PROJECT_DIR$/reaper/corp_obj.py" />
-        <option value="$PROJECT_DIR$/reaper/spider.py" />
         <option value="$PROJECT_DIR$/gui/134236285108.txt" />
         <option value="$PROJECT_DIR$/reaper/common.py" />
         <option value="$PROJECT_DIR$/gui/misc.py" />
@@ -138,6 +125,7 @@
         <option value="$PROJECT_DIR$/reaper/grab.py" />
         <option value="$PROJECT_DIR$/reaper/misc.py" />
         <option value="$PROJECT_DIR$/reaper/constants.py" />
+        <option value="$PROJECT_DIR$/reaper/spider.py" />
       </list>
     </option>
   </component>
@@ -683,7 +671,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/reaper/constants.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="15" column="0" selection-start="382" selection-end="382" vertical-scroll-proportion="0.0">
+        <state line="19" column="0" selection-start="437" selection-end="437" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
@@ -697,7 +685,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/gui/main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="196" column="0" selection-start="6651" selection-end="6651" vertical-scroll-proportion="0.0">
+        <state line="196" column="0" selection-start="6649" selection-end="6649" vertical-scroll-proportion="0.0">
           <folding>
             <element signature="e#18#32#0" expanded="true" />
           </folding>
@@ -706,21 +694,14 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/reaper/grab.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="24" column="0" selection-start="572" selection-end="572" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/reaper/common.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="9" column="0" selection-start="119" selection-end="119" vertical-scroll-proportion="0.389049">
+        <state line="24" column="0" selection-start="568" selection-end="568" vertical-scroll-proportion="0.043227665">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/reaper/spider.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="60" column="29" selection-start="1986" selection-end="1986" vertical-scroll-proportion="0.362776">
+        <state line="60" column="29" selection-start="1982" selection-end="1982" vertical-scroll-proportion="0.362776">
           <folding />
         </state>
       </provider>
