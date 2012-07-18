@@ -8,7 +8,8 @@ from urllib3.connectionpool import HTTPConnectionPool
 import urllib2
 from urllib2 import URLError
 import re
-
+#设定错误超时，以免发生一直卡住的现象
+urllib2.socket.setdefaulttimeout(30)
 class CorpItem(object):
     """对抓取的单个企业数据的集合，和一些常用方法的集合"""
 
