@@ -12,7 +12,8 @@ from reaper.content_man import ContentManager
 from reaper.spider import grab
 from urllib3.connectionpool import HTTPConnectionPool
 from pyExcelerator import *
-
+import mysql
+import excel
 the_lock = threading.RLock()
 
 
@@ -116,18 +117,6 @@ def start_multi_threading(
 
     return container
 
-#TODO Insert MYSQL and EXCEL
-def initExcel(worksheet):
-    xls_headers=[u"公司名",u"公司ID编码",u"公司简介",u"公司主要产品",u"公司网站",u"公司网站标题"]
-    for i in range(0,6):
-        worksheet.write(0,i,xls_headers[i])
-    return
-
-def insertToExcel(worksheet,row,item):
-    items=item.get_info_as_tuple()
-    for i in range(0,6):
-        worksheet.write(row,i,str(items[i]).decode('utf-8'))
-
 if __name__ == '__main__':
     row=0
     def transact(item, file_obj):
@@ -136,20 +125,36 @@ if __name__ == '__main__':
             return
         with the_lock:
             #print >> file_obj, item.corp_name, ',', item.id, ',', item.introduction, ',', item.website, ',', item.website_title
-            #row控制写入行数
+
+            #row控制写入行数,写入excel
             row+=1
-            insertToExcel(ws,row,item)
+            excel.insertToExcel(row=row,item=item)
+
+            #写入mysql
+            mysql.inserttoMysql(item.get_info_as_tuple())
+
+            #写入txt
             file_obj.write(item.corp_name+"\n       ID:"+item.id+"\n       公司简介:"+item.introduction+"\n       主要产品关键词:"+item.product+"\n       网址:"+item.website+"\n       网址标题:"+item.website_title+'\n')
             file_obj.flush()
+
     #初始化要写入的表格
-    w=Workbook()
-    ws = w.add_sheet('CompanyInformation')
-    initExcel(ws)
+    excel.initExcel()
+
+    #初始化要写入的mysql数据库
+    #默认 host地址="localhost"，用户名='root'，密码='123456'，数据库名='companyinformation'，插入表名='companyinformation'
+    mysql.initMysql()
+
+
     with open(str(int(time.time() * 100)) + '.txt', 'w') as ff:
         cont_man = ContentManager(functools.partial(transact, file_obj=ff))
-        start_multi_threading('公司', (1, 5),thread_num=10,content_man=cont_man, max_retry=15, logger=reaper.logger)
+        start_multi_threading('公司', (1, 2),thread_num=1,content_man=cont_man, max_retry=15, logger=reaper.logger)
         cont_man.join_all()
-        w.save("output.xls")
-# TODO ui
 
+        #写入完毕，保存excel ,输出文件名可以自定义
+        outputname="OutputCompanyInfor.xls"
+        excel.finishExcel(outputname)
+
+        #写入完毕，提交mysql
+        mysql.finishInsertMysql()
+# TODO ui
 
