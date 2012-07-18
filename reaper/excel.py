@@ -1,17 +1,21 @@
 #encoding:utf-8
 from pyExcelerator import *
-#create a work book
-w = Workbook()
-ws = w.add_sheet('user')
- 
-#create xls header
-xls_header = [u'啊userName', 'email', 'tel']
-for x in range(0, 3):
-    ws.write(0, x, xls_header[x])
- 
-#write content
-ws.write(1, 0, 'admin')
-ws.write(1, 1, u'黑admin@admin.com')
-ws.write(1, 2, '18888888888')
-w.save('test.xls')
 
+w=Workbook()
+ws = w.add_sheet('CompanyInformation')
+
+def initExcel(worksheet=ws):
+    global w,ws
+    xls_headers=[u"公司ID编码",u"公司名",u"公司简介",u"公司主要产品",u"公司网站",u"公司网站标题"]
+    for i in range(0,6):
+        worksheet.write(0,i,xls_headers[i])
+
+def insertToExcel(worksheet=ws,row=1,item=0):
+    global w,ws
+    items=item.get_info_as_tuple()
+    for i in range(0,6):
+        worksheet.write(row,i,str(items[i]).decode('utf-8'))
+
+def finishExcel(outputname='test.xls'):
+    global w
+    w.save(outputname)
