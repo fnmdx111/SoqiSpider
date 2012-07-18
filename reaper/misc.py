@@ -1,6 +1,7 @@
 # encoding: utf-8
 import urllib
 from bs4 import BeautifulSoup
+import reaper
 from reaper.constants import HEADERS, PATTERN_ITEM_AMOUNT
 from urllib3.connectionpool import HTTPConnectionPool
 
@@ -24,30 +25,37 @@ def take(iterable, by=5):
         iterable = iterable[by:]
 
 
-def get_estimate_item_amount(keyword, city_id, pool):
+def get_estimate_item_amount(keyword, city_id, pool, logger, max_retry=15):
     values = {
         'city': city_id,
         'keywords': keyword,
         'search_type': 0,
         'page': 1
     }
+    encoded_value = urllib.urlencode(values)
 
-    response = pool.request('GET', 'http://www.soqi.cn/search?' + urllib.urlencode(values))
+    retry = 0
 
-    soup = BeautifulSoup(response.data)
 
     def p(tag):
         return tag.name == 'span' and '项结果'.decode('utf-8') in tag.get_text()
 
-    matches = PATTERN_ITEM_AMOUNT.search(soup.find(p).get_text().encode('utf-8'))
+    while retry < max_retry:
+        response = pool.request('GET', 'http://www.soqi.cn/search?' + encoded_value)
+        soup = BeautifulSoup(response.data)
 
-    if matches:
-        return int(matches.group(1))
+        tag = soup.find(p)
+        if tag:
+            matches = PATTERN_ITEM_AMOUNT.search(tag.get_text().encode('utf-8'))
+            if matches:
+                return int(matches.group(1))
+        logger.info('soqi.cn返回空网页，重试')
+
     return -1
 
 
-
 if __name__ == '__main__':
-    print get_estimate_item_amount('公司', '110000', HTTPConnectionPool('www.soqi.cn', headers=HEADERS))
-    print get_estimate_item_amount('厂', '120000', HTTPConnectionPool('www.soqi.cn', headers=HEADERS))
+    print list(take(['130100', '130200', '130300', '130400', '130500', '130600', '130700', '130800', '130900', '131000', '131100', '140100', '140200', '140300', '140400', '140500', '140600', '140700', '140800', '140900', '141000', '141100'], 5))
+    print get_estimate_item_amount('公司', '110000', HTTPConnectionPool('www.soqi.cn', headers=HEADERS), logger=reaper.logger)
+    print get_estimate_item_amount('厂', '120000', HTTPConnectionPool('www.soqi.cn', headers=HEADERS), logger=reaper.logger)
 

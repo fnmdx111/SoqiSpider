@@ -4,7 +4,8 @@ from PyQt4.QtCore import *
 import threading
 
 
-THREAD_AMOUNT_SAFE = 10
+THREAD_AMOUNT_SAFE = 300
+SUBTHREAD_AMOUNT = 20
 
 ITEM_DENSITY = 7 # this means every page has 7 items in average
 

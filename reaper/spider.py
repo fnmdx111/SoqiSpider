@@ -49,9 +49,12 @@ def _grab(keyword, page_number, pool, city_code='100000', logger=None, predicate
                 })))
 
     if len(candidates):
+        logger.info('soqi.cn在第%s页返回有效信息，继续', page_number)
         if not soup.find_all(text='下一页'):
             logger.debug('last page found: %s', page_number)
             misc.last_page_found = page_number
+    else:
+        logger.info('soqi.cn在第%s页返回空网页，重试', page_number)
 
     return (False if len(candidates) else True, # 可能会出现该页面非空，但是全部item都不和条件的情况
             filter(predicate, candidates))

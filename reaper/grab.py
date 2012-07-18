@@ -6,8 +6,8 @@ import threading
 import time
 from reaper import misc
 import reaper
-from reaper.misc import partition, get_estimate_item_amount
-from reaper.constants import HEADERS, AUTO
+from reaper.misc import partition
+from reaper.constants import HEADERS
 from reaper.content_man import ContentManager
 from reaper.spider import grab
 from urllib3.connectionpool import HTTPConnectionPool
@@ -27,9 +27,9 @@ def _start_multi_threading(per_thread_func, per_thread_args):
         threads.append(Thread(target=per_thread_func, args=args))
         threads[-1].start()
 
-    for thread in threads:
-        # 阻塞以免程序退出
-        thread.join()
+    # for thread in threads:
+    #     # 阻塞以免程序退出
+    #     thread.join()
 
 
 def start_multi_threading(
@@ -58,6 +58,8 @@ def start_multi_threading(
     conn_pool = HTTPConnectionPool(host=url, maxsize=thread_num, block=True, headers=HEADERS)
 
     retry = 1
+
+    to_page = min(to_page, 2000)
 
     range_all = range(from_page, to_page + 1)
     set_all = set(range_all)

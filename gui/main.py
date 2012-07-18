@@ -4,7 +4,8 @@ import threading
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 import sys
-from gui.misc import LoggerHandler, ParameterSet, THREAD_AMOUNT_SAFE, ITEM_DENSITY
+import time
+from gui.misc import LoggerHandler, ParameterSet, THREAD_AMOUNT_SAFE, ITEM_DENSITY, SUBTHREAD_AMOUNT
 from reaper.misc import take, get_estimate_item_amount
 from reaper.constants import REQUIRED_SUFFIXES, AUTO
 from reaper.content_man import ContentManager
@@ -50,10 +51,26 @@ class Form(QDialog, object):
         self.connect(self.btn_start, SIGNAL('clicked()'), self.btn_start_click)
         self.connect(self.logger_widget, SIGNAL('newLog(QString)'), self.new_log)
         self.connect(self, SIGNAL('jobFinished()'), self.grabbing_finished)
+        self.connect(self, SIGNAL('activeThreadCountChanged(int)'), self.active_thread_count_changed)
+
+        def active_thread_counter():
+            current_count = threading.active_count()
+            while True:
+                if current_count != threading.active_count():
+                    current_count = threading.active_count()
+                    self.emit(SIGNAL('activeThreadCountChanged(int)'), current_count)
+
+        th = threading.Thread(target=active_thread_counter)
+        th.setDaemon(True)
+        th.start()
 
         self.parameters = parameters
 
         self.transactor_func = transactor_func
+
+
+    def active_thread_count_changed(self, count):
+        self.setWindowTitle(u'soqi.cn爬虫 活跃线程数: %s' % count)
 
 
     def _gen_LineEdit_layout(self):
@@ -138,11 +155,15 @@ class Form(QDialog, object):
         def _(params):
             cont_man = ContentManager(self.transactor_func)
             for param in params:
+                self.logger.debug('\n'.join([str(p) for p in params]))
                 if param.to_page == AUTO:
                     self.logger.info('auto to_page detected... getting amount estimation')
-                    item_amount = get_estimate_item_amount(param.keyword, param.city_id, conn_pool)
-                    self.logger.info('estimated to_page: %s', param.to_page)
-                    param.to_page = int(item_amount / ITEM_DENSITY) + 1
+                    item_amount = get_estimate_item_amount(param.keyword, param.city_id, conn_pool, self.logger)
+                    if item_amount > 0:
+                        param.to_page = int(item_amount / ITEM_DENSITY) + 1
+                    else:
+                        param.to_page = 2000
+                    self.logger.info('total items: %s, estimated to_page: %s', item_amount, param.to_page)
 
                 self.logger.info(
                     'keyword %s, city %s, (%d, %d) starting',
@@ -156,7 +177,7 @@ class Form(QDialog, object):
                     city_code=param.city_id,
                     content_man=cont_man,
                     max_retry=15,
-                    thread_num=20,
+                    thread_num=SUBTHREAD_AMOUNT,
                     logger=self.logger
                 )
 
@@ -164,12 +185,19 @@ class Form(QDialog, object):
 
             self.emit(SIGNAL('jobFinished()'))
 
-        # FIXME problem: I/O operation on closed file`, probable solution: use external func
-        for sub_params in take(parameters, by=len(parameters) / THREAD_AMOUNT_SAFE):
-            transactor_thread = threading.Thread(target=_, args=(sub_params,)) # 这个线程开启THREAD_AMOUNT_SAFE个线程
-            transactor_thread.setDaemon(True)
-            transactor_thread.start() # 新启动一个线程，以免阻塞ui线程
-            transactor_thread.join() # 阻塞，防止一次启动多个抓取主线程，吃不消
+        def dummy():
+            self.logger.debug('will take %s params each time', int(self.thread_amount / SUBTHREAD_AMOUNT))
+
+            for sub_params in take(parameters, by=int(self.thread_amount / SUBTHREAD_AMOUNT)): # e.g. by=300 / 20 = 15 即一次并发抓取15个city_id
+                self.logger.info('当前并发抓取的id为: %s', map(lambda item: item.city_id, sub_params))
+                transactor_thread = threading.Thread(target=_, args=(sub_params,)) # 这个线程开启THREAD_AMOUNT_SAFE个线程
+                transactor_thread.setDaemon(True)
+                transactor_thread.start()
+                transactor_thread.join() # 阻塞，防止一次启动多个抓取主线程，吃不消
+
+        t = threading.Thread(target=dummy)
+        t.setDaemon(True)
+        t.start() # 新启动一个线程，以免阻塞ui线程
 
 
     def prepare_parameters(self):
@@ -191,10 +219,11 @@ class Form(QDialog, object):
             self.logger.error('请输入有效的值')
             return
 
-        if not to_page: # TODO implement auto to_page mechanism
+        if not to_page:
             to_page = AUTO
-        if not self.thread_amount: # TODO implement auto thread_amount mechanism
+        if not self.thread_amount:
             self.thread_amount = AUTO
+            self.thread_amount = min(self.thread_amount, THREAD_AMOUNT_SAFE)
 
         self.logger.debug(
             'start_id: %s, end_id: %s, from_page: %s, to_page: %s, thread_amount: %s',
@@ -247,18 +276,16 @@ class Form(QDialog, object):
 
 
 # TODO implement config file mechanism
+# TODO implement stop threading mechanism
 if __name__ == '__main__':
-    the_the_lock = threading.RLock()
-    # with open(str(int(time.time() * 100)) + '.txt', 'w') as ff:
-    with the_the_lock:
+    with open(str(int(time.time() * 100)) + '.txt', 'w') as ff:
+        the_lock = threading.RLock()
         def transact(item):
-            the_lock = threading.RLock()
             if not item.is_valid_item():
                 return
             with the_lock:
-                # print >> ff, item.corp_name, ',', item.website_title, ',', item.introduction
-                # ff.flush()
-                pass
+                print >> ff, item.corp_name, ',', item.website_title, ',', item.introduction
+                ff.flush()
 
 
         app = QApplication(sys.argv)

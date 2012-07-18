@@ -30,15 +30,20 @@ def get_ids(start, end):
         return sorted((item for item in collection if predicate(item)))
 
     def get_city_id(county_id, which_one):
+        # FIXME bug
+        if county_id[:2] + '0000' in municipalities:
+            return get_adjacent_city_id(county_id, which_one)
+
         probable_city_id = county_id[:-2] + '00'
         if probable_city_id in cities:
             return probable_city_id
-        elif county_id in municipality_areas:
-            return county_id[:2] + '0000'
         else:
             return get_adjacent_city_id(probable_city_id, which_one)
 
     def reduce_counties(chunk, city_id):
+        if city_id in municipalities:
+            return chunk
+
         chunk, counties = list(chunk), list(get_counties(city_id))
         if chunk == counties:
             return [city_id]
@@ -68,6 +73,8 @@ def get_ids(start, end):
 
 
 if __name__ == '__main__':
-    print get_ids('111111', '371512')
+    print sorted(list(get_ids('123333', '144499')))
+    print len(sorted(list(get_ids('000000', '999999'))))
+    print len(cities)
 
 

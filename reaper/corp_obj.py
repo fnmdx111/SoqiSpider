@@ -22,9 +22,11 @@ class CorpItem(object):
         city_id: 被抓去到的城市号"""
         self.page_num = page_num
         self.city_id = city_id
-        self.raw = raw_content
+        # self.raw = raw_content
         self.logger = logger
         self.extracted = False
+
+        self.extract_info(raw_content)
 
 
     @staticmethod
@@ -44,14 +46,18 @@ class CorpItem(object):
 
 
     @staticmethod
-    def get_corp_link(li):
+    def get_corp_link(li, logger):
         """根据<li>获取企业主页地址
         li: 略
         返回: 企业主页地址，若没有则返回空"""
         cite = li.find_all(name='cite')[0]
 
         if cite.find(name='a'):
-            return ''.join(cite.a.get('href').split()).encode('utf-8')
+            result = ''.join(cite.a.get('href').split()).encode('utf-8')
+            if not result.startswith('http://'):
+                logger.warning('为%s加上了`http://\'', result)
+                result = 'http://' + result
+            return result
         else:
             return ''
 
@@ -80,17 +86,18 @@ class CorpItem(object):
 
     def __getattr__(self, item):
         """因为CorpItem为部分惰性加载的原因，需要对不是惰性加载的属性做标记"""
-        if not self.extracted:
-            self.extracted = True
-            self.extract_info(self.raw)
+        # if not self.extracted:
+        #     self.extracted = True
+        #     self.extract_info(self.raw)
 
         if item in ['introduction', 'product', 'website_title']:
             if self.thread.is_alive:
-                self.thread.join()
+                self.thread.join(10)
             return self.__getattribute__('_' + item)
         else:
             return self.__getattribute__(item)
 
+    ENCODING_PATTERN = re.compile(r'<meta\s+[^>]*?charset\s*?="?\s*?([^">]+)')
 
     def extract_info(self, raw_content):
         """根据raw_content抽取所需要的信息
@@ -99,7 +106,7 @@ class CorpItem(object):
         self.id_page = ''
         self.id, self.corp_name = CorpItem.get_corp_id_and_name(raw_content, self)
         self.id = self.city_id + '_' + self.id
-        self.website = CorpItem.get_corp_link(raw_content)
+        self.website = CorpItem.get_corp_link(raw_content, self.logger)
         self._website_title = ''
         self._product = ''
         self._introduction = ''
@@ -113,10 +120,20 @@ class CorpItem(object):
                 try:
                     request = urllib2.Request(self.website, headers=COMMON_HEADERS)
                     response = urllib2.urlopen(request)
-                    self.logger.info('connecting %s' % self.website)
+                    self.logger.info('正在连接 %s' % self.website)
                     if response:
-                        self._website_title = BeautifulSoup(response.read(), 'lxml').head.title.get_text().encode('utf-8')
-                        if not self._website_title:
+                        data = response.read()
+                        _matches = CorpItem.ENCODING_PATTERN.search(data)
+                        if _matches:
+                            encoding = _matches.group(1)
+                            self.logger.warning('%s首页检测到编码信息: %s', self._website_title, encoding)
+                            soup = BeautifulSoup(data, 'lxml', from_encoding=encoding)
+                        else:
+                            encoding = ''
+                            soup = BeautifulSoup(data, 'lxml')
+                        title = soup.head.title.get_text()
+                        self._website_title = (title.decode(encoding) if encoding else title).encode('utf-8')
+                        if (not self._website_title) or ('全球最丰富的供应信息 尽在阿里巴巴' in self._website_title):
                             return
                     else:
                         return
@@ -125,18 +142,21 @@ class CorpItem(object):
                     if response:
                         self._introduction, self._product = CorpItem.get_corp_intro_and_product(BeautifulSoup(response.data, 'lxml'))
                 except URLError as e:
-                    self.logger.warning('%s %s', e, self.website.__repr__())
-                except AttributeError as e:
-                    self.logger.info('%s has no title', self.website)
+                    self.logger.warning('域名%s也许是过期了', self.website.__repr__())
+                except AttributeError as _:
+                    self.logger.info('%s没有标题', self.website)
                 except ValueError as e:
-                    self.logger.warning('%s is url of unknown type', self.website if self.website else 'n/a')
+                    if 'unknown url type' in e.message:
+                        self.logger.error('未知的URL类型: %s', self.website if self.website else 'n/a')
+                except BaseException as e:
+                    self.logger.error('未知的错误: %s', e)
                 finally:
-                    del self.raw
+                    pass
 
         # 开启抓取企业和产品简介以及企业主页标题的线程
         self.thread = threading.Thread(target=per_thread, args=())
         self.thread.start()
-        self.thread.join() # thread.join()的位置有待考虑
+        # self.thread.join() # thread.join()的位置有待考虑
 
 
     def get_info_as_tuple(self):
