@@ -6,12 +6,11 @@ import threading
 import time
 from reaper import misc
 import reaper
-from reaper.misc import partition
-from reaper.constants import HEADERS
+from reaper.misc import partition, get_estimate_item_amount
+from reaper.constants import HEADERS, AUTO
 from reaper.content_man import ContentManager
 from reaper.spider import grab
 from urllib3.connectionpool import HTTPConnectionPool
-from pyExcelerator import *
 import mysql
 import excel
 the_lock = threading.RLock()
@@ -64,7 +63,6 @@ def start_multi_threading(
     set_all = set(range_all)
     set_diff = set_all
 
-    # TODO add estimation of the amount of the items
     while set_diff:
         if retry > max_retry:
             break
@@ -156,5 +154,4 @@ if __name__ == '__main__':
 
         #写入完毕，提交mysql
         mysql.finishInsertMysql()
-# TODO ui
 

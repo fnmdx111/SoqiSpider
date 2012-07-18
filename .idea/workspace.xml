@@ -2,7 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="7ca28858-e9a5-4619-a81a-c9693fe37f51" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="DELETED" beforePath="D:\workspace\SoqiSpider\.idea\workspace.xml" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/gui/main.py" afterPath="$PROJECT_DIR$/gui/main.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/gui/misc.py" afterPath="$PROJECT_DIR$/gui/misc.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/reaper/grab.py" afterPath="$PROJECT_DIR$/reaper/grab.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/reaper/misc.py" afterPath="$PROJECT_DIR$/reaper/misc.py" />
     </list>
     <ignored path="SoqiSpider.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -19,25 +23,6 @@
   <component name="DaemonCodeAnalyzer">
     <disable_hints />
   </component>
-  <component name="DockManager">
-    <window id="1">
-      <content type="file-editors">
-        <state>
-          <leaf>
-            <file leaf-file-name="spider.py" pinned="false" current="false" current-in-tab="true">
-              <entry file="file://$PROJECT_DIR$/reaper/spider.py">
-                <provider selected="true" editor-type-id="text-editor">
-                  <state line="60" column="29" selection-start="1982" selection-end="1982" vertical-scroll-proportion="0.29022083">
-                    <folding />
-                  </state>
-                </provider>
-              </entry>
-            </file>
-          </leaf>
-        </state>
-      </content>
-    </window>
-  </component>
   <component name="FavoritesManager">
     <favorites_list name="SoqiSpider" />
   </component>
@@ -46,16 +31,27 @@
       <file leaf-file-name="grab.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/reaper/grab.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="24" column="0" selection-start="568" selection-end="568" vertical-scroll-proportion="0.0">
+            <state line="96" column="30" selection-start="2710" selection-end="2710" vertical-scroll-proportion="0.0">
+              <folding>
+                <element signature="e#19#35#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="misc.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/gui/misc.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="6" column="22" selection-start="114" selection-end="114" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="workspace.xml" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/.idea/workspace.xml">
+      <file leaf-file-name="misc.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/reaper/misc.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="44" column="22" selection-start="2670" selection-end="2670" vertical-scroll-proportion="0.778098">
+            <state line="41" column="0" selection-start="1010" selection-end="1010" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -79,10 +75,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="mysql.py" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="mysql.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/reaper/mysql.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="7" column="0" selection-start="113" selection-end="113" vertical-scroll-proportion="0.0">
+            <state line="12" column="13" selection-start="176" selection-end="176" vertical-scroll-proportion="0.5555556">
               <folding />
             </state>
           </provider>
@@ -91,8 +87,10 @@
       <file leaf-file-name="main.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/gui/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="196" column="0" selection-start="6649" selection-end="6649" vertical-scroll-proportion="0.0">
-              <folding />
+            <state line="66" column="54" selection-start="2399" selection-end="2399" vertical-scroll-proportion="0.0">
+              <folding>
+                <element signature="e#18#32#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -120,21 +118,21 @@
         <option value="$PROJECT_DIR$/reaper/corp_obj.py" />
         <option value="$PROJECT_DIR$/gui/134236285108.txt" />
         <option value="$PROJECT_DIR$/reaper/common.py" />
-        <option value="$PROJECT_DIR$/gui/misc.py" />
-        <option value="$PROJECT_DIR$/gui/main.py" />
-        <option value="$PROJECT_DIR$/reaper/grab.py" />
-        <option value="$PROJECT_DIR$/reaper/misc.py" />
         <option value="$PROJECT_DIR$/reaper/constants.py" />
         <option value="$PROJECT_DIR$/reaper/spider.py" />
         <option value="$PROJECT_DIR$/.idea/workspace.xml" />
+        <option value="$PROJECT_DIR$/reaper/misc.py" />
+        <option value="$PROJECT_DIR$/reaper/grab.py" />
+        <option value="$PROJECT_DIR$/gui/misc.py" />
+        <option value="$PROJECT_DIR$/gui/main.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="219" />
-    <option name="y" value="77" />
-    <option name="width" value="1015" />
-    <option name="height" value="639" />
+    <option name="x" value="-8" />
+    <option name="y" value="-8" />
+    <option name="width" value="1320" />
+    <option name="height" value="784" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <OptionsSetting value="true" id="Add" />
@@ -232,20 +230,20 @@
     <property name="FileHistory.git4idea.history.GitHistoryProvider_treeOrder2" value="2" />
     <property name="FileHistory.git4idea.history.GitHistoryProvider_treeWidth0" value="93" />
     <property name="recentsLimit" value="5" />
-    <property name="options.lastSelected" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+    <property name="options.lastSelected" value="com.jetbrains.python.configuration.PythonSdkConfigurable" />
     <property name="FileHistory.git4idea.history.GitHistoryProvider_flatOrder1" value="1" />
     <property name="FileHistory.git4idea.history.GitHistoryProvider_flatOrder0" value="0" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/.idea" />
     <property name="FileHistory.git4idea.history.GitHistoryProvider_flatWidth2" value="102" />
-    <property name="FileHistory.git4idea.history.GitHistoryProvider_treeWidth3" value="767" />
     <property name="FileHistory.git4idea.history.GitHistoryProvider_flatWidth3" value="773" />
+    <property name="FileHistory.git4idea.history.GitHistoryProvider_treeWidth3" value="767" />
     <property name="FileHistory.git4idea.history.GitHistoryProvider_treeWidth2" value="96" />
     <property name="FileHistory.git4idea.history.GitHistoryProvider_treeWidth1" value="83" />
-    <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="FileHistory.git4idea.history.GitHistoryProvider_flatOrder2" value="2" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="FileHistory.git4idea.history.GitHistoryProvider_flatOrder3" value="3" />
-    <property name="options.searchVisible" value="true" />
     <property name="options.splitter.details.proportions" value="0.2" />
+    <property name="options.searchVisible" value="true" />
   </component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
@@ -261,7 +259,7 @@
       <recent name="D:\workspace\SoqiSpider" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.misc">
+  <component name="RunManager" selected="Python.main">
     <configuration default="false" name="content_man" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -526,23 +524,23 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="219" y="77" width="1015" height="639" extended-state="0" />
-    <editor active="true" />
+    <frame x="-8" y="-8" width="1320" height="784" extended-state="6" />
+    <editor active="false" />
     <layout>
       <window_info id="Data Sources" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.329718" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.329718" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.329582" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.2623295" sideWeight="0.8092243" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39832285" sideWeight="0.99681866" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.12559618" sideWeight="0.5836013" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3971061" sideWeight="0.9046105" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.19077568" sideWeight="0.5" order="8" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4171908" sideWeight="0.99683875" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4163987" sideWeight="0.089825116" order="8" side_tool="true" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.4163987" sideWeight="0.9046105" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.329718" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.329718" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.329718" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Regex Tester" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.329718" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -618,17 +616,12 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/gui/main.py</url>
-          <line>137</line>
+          <line>146</line>
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/reaper/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="11" column="0" selection-start="168" selection-end="168" vertical-scroll-proportion="0.0" />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/reaper/corp_obj.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="139" column="0" selection-start="4659" selection-end="4659" vertical-scroll-proportion="0.0" />
@@ -637,11 +630,6 @@
     <entry file="file://$PROJECT_DIR$/reaper/content_man.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="12" column="18" selection-start="246" selection-end="246" vertical-scroll-proportion="0.0" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/gui/misc.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="9" column="19" selection-start="138" selection-end="138" vertical-scroll-proportion="0.1171875" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/gui/__init__.py">
@@ -671,37 +659,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/reaper/grab.py">
+    <entry file="file://$PROJECT_DIR$/.idea/workspace.xml">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="24" column="0" selection-start="568" selection-end="568" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/urllib3/connectionpool.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="167" column="0" selection-start="4863" selection-end="4863" vertical-scroll-proportion="0.0" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/reaper/constants.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="19" column="0" selection-start="437" selection-end="437" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/reaper/mysql.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="7" column="0" selection-start="113" selection-end="113" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/gui/main.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="196" column="0" selection-start="6649" selection-end="6649" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
+        <state line="6" column="13" selection-start="349" selection-end="349" vertical-scroll-proportion="0.259366" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/reaper/spider.py">
@@ -711,9 +671,51 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/.idea/workspace.xml">
+    <entry file="file://$PROJECT_DIR$/reaper/constants.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="44" column="22" selection-start="2670" selection-end="2670" vertical-scroll-proportion="0.778098">
+        <state line="19" column="0" selection-start="437" selection-end="437" vertical-scroll-proportion="0.0" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/reaper/grab.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="96" column="30" selection-start="2710" selection-end="2710" vertical-scroll-proportion="0.0">
+          <folding>
+            <element signature="e#19#35#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/urllib3/connectionpool.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="167" column="0" selection-start="4863" selection-end="4863" vertical-scroll-proportion="0.0" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gui/misc.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="6" column="22" selection-start="114" selection-end="114" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/reaper/misc.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="41" column="0" selection-start="1010" selection-end="1010" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gui/main.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="66" column="54" selection-start="2399" selection-end="2399" vertical-scroll-proportion="0.0">
+          <folding>
+            <element signature="e#18#32#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/reaper/mysql.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="12" column="13" selection-start="176" selection-end="176" vertical-scroll-proportion="0.5555556">
           <folding />
         </state>
       </provider>

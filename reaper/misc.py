@@ -48,5 +48,6 @@ def get_estimate_item_amount(keyword, city_id, pool):
 
 
 if __name__ == '__main__':
-    get_estimate_item_amount('公司', '110000', HTTPConnectionPool('www.soqi.cn', headers=HEADERS))
+    print get_estimate_item_amount('公司', '110000', HTTPConnectionPool('www.soqi.cn', headers=HEADERS))
+    print get_estimate_item_amount('厂', '120000', HTTPConnectionPool('www.soqi.cn', headers=HEADERS))
 

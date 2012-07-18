@@ -4,8 +4,9 @@ from PyQt4.QtCore import *
 import threading
 
 
-_THREAD_AMOUNT_SAFE = 20
+THREAD_AMOUNT_SAFE = 10
 
+ITEM_DENSITY = 7 # this means every page has 7 items in average
 
 class LoggerHandler(Handler):
     def __init__(self, logger_widget):

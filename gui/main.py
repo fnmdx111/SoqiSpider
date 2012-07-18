@@ -4,14 +4,13 @@ import threading
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 import sys
-import time
-from gui.misc import LoggerHandler, ParameterSet, _THREAD_AMOUNT_SAFE
-from reaper.misc import take
+from gui.misc import LoggerHandler, ParameterSet, THREAD_AMOUNT_SAFE, ITEM_DENSITY
+from reaper.misc import take, get_estimate_item_amount
 from reaper.constants import REQUIRED_SUFFIXES, AUTO
 from reaper.content_man import ContentManager
 from reaper.grab import start_multi_threading
 from reaper.id_gen import get_ids
-
+from urllib3.connectionpool import HTTPConnectionPool
 
 
 class Form(QDialog, object):
@@ -131,22 +130,33 @@ class Form(QDialog, object):
 
 
     def start_threads(self, parameters):
+        # 单位时间总线程数: THREAD_AMOUNT_SAFE * thread_num + 企业数 / C < 500
         self.logger.debug('starting threads')
+
+        conn_pool = HTTPConnectionPool(host='www.soqi.cn')
+
         def _(params):
             cont_man = ContentManager(self.transactor_func)
             for param in params:
+                if param.to_page == AUTO:
+                    self.logger.info('auto to_page detected... getting amount estimation')
+                    item_amount = get_estimate_item_amount(param.keyword, param.city_id, conn_pool)
+                    self.logger.info('estimated to_page: %s', param.to_page)
+                    param.to_page = int(item_amount / ITEM_DENSITY) + 1
+
                 self.logger.info(
                     'keyword %s, city %s, (%d, %d) starting',
                     param.keyword, param.city_id,
                     param.from_page, param.to_page
                 )
 
-                start_multi_threading(
+                start_multi_threading( # 这个函数开启thread_num个线程
                     param.keyword,
                     (param.from_page, param.to_page),
                     city_code=param.city_id,
                     content_man=cont_man,
                     max_retry=15,
+                    thread_num=20,
                     logger=self.logger
                 )
 
@@ -155,10 +165,11 @@ class Form(QDialog, object):
             self.emit(SIGNAL('jobFinished()'))
 
         # FIXME problem: I/O operation on closed file`, probable solution: use external func
-        for sub_params in take(parameters, by=len(parameters) / _THREAD_AMOUNT_SAFE):
-            transactor_thread = threading.Thread(target=_, args=(sub_params,))
+        for sub_params in take(parameters, by=len(parameters) / THREAD_AMOUNT_SAFE):
+            transactor_thread = threading.Thread(target=_, args=(sub_params,)) # 这个线程开启THREAD_AMOUNT_SAFE个线程
             transactor_thread.setDaemon(True)
-            transactor_thread.start()
+            transactor_thread.start() # 新启动一个线程，以免阻塞ui线程
+            transactor_thread.join() # 阻塞，防止一次启动多个抓取主线程，吃不消
 
 
     def prepare_parameters(self):
@@ -197,7 +208,7 @@ class Form(QDialog, object):
             map(lambda item: unicode(item.text()).encode('utf-8'), self.get_checked_keywords()))
 
 
-    def has_validate_inputs(self):
+    def has_valid_inputs(self):
         _get_texts = lambda iterable: map(lambda _: unicode(self.__getattribute__(_).text()), iterable)
 
         start_id, end_id = _get_texts(('le_start_id', 'le_end_id'))
@@ -229,7 +240,7 @@ class Form(QDialog, object):
             '%s checked',
             ' '.join(map(lambda item: unicode(item.text()).encode('utf-8'), self.get_checked_keywords())))
 
-        if not self.has_validate_inputs():
+        if not self.has_valid_inputs():
             return
 
         self.start_threads(self.prepare_parameters())
