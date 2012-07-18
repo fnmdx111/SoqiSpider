@@ -4,13 +4,13 @@ import functools
 from threading import Thread
 import threading
 import time
-from reaper import common
+from reaper import misc
 import reaper
+from reaper.misc import partition
 from reaper.constants import HEADERS
 from reaper.content_man import ContentManager
 from reaper.spider import grab
 from urllib3.connectionpool import HTTPConnectionPool
-from pyExcelerator import *
 import mysql
 import excel
 the_lock = threading.RLock()
@@ -27,9 +27,9 @@ def _start_multi_threading(per_thread_func, per_thread_args):
         threads.append(Thread(target=per_thread_func, args=args))
         threads[-1].start()
 
-    for thread in threads:
-        # 阻塞以免程序退出
-        thread.join()
+    # for thread in threads:
+    #     # 阻塞以免程序退出
+    #     thread.join()
 
 
 def start_multi_threading(
@@ -54,15 +54,12 @@ def start_multi_threading(
     url: 创建连接池所用的host
     返回: 装载了所抓取的CorpItem对象的container
     其他同_grab，略"""
-    def partition(iterable, by=10):
-        """按每by个把iterable分成若干组"""
-        if not by:
-            return [iterable]
-        return [iterable[i * by:(i + 1) * by] for i in range(len(iterable) / by  + (1 if len(iterable) % by != 0 else 0))]
 
     conn_pool = HTTPConnectionPool(host=url, maxsize=thread_num, block=True, headers=HEADERS)
 
     retry = 1
+
+    to_page = min(to_page, 2000)
 
     range_all = range(from_page, to_page + 1)
     set_all = set(range_all)
@@ -89,7 +86,7 @@ def start_multi_threading(
                 city_code=city_code,
                 logger=logger,
                 predicate=predicate
-            )
+            ) # 注意grabber是一个生成器
             for page, is_empty_page, grabbed_items in grabber:
                 if not is_empty_page:
                     grabbed_page_list.append(page)
@@ -112,9 +109,9 @@ def start_multi_threading(
         set_diff -= set(grabbed_page_list)
         retry += 1
 
-        if common.last_page_found:
+        if misc.last_page_found:
             # 如果找到了最后一页的页码，则将剩余页码中大于等于它的去掉
-            set_diff = set(filter(lambda x: x < common.last_page_found, set_diff))
+            set_diff = set(filter(lambda x: x < misc.last_page_found, set_diff))
 
     logger.debug('escaped from while set_diff')
 
@@ -150,14 +147,13 @@ if __name__ == '__main__':
 
     with open(str(int(time.time() * 100)) + '.txt', 'w') as ff:
         cont_man = ContentManager(functools.partial(transact, file_obj=ff))
-        start_multi_threading('公司', (1, 200),thread_num=1,content_man=cont_man, max_retry=15, logger=reaper.logger)
+        start_multi_threading('公司', (1, 2),thread_num=1,content_man=cont_man, max_retry=15, logger=reaper.logger)
         cont_man.join_all()
 
         #写入完毕，保存excel ,输出文件名可以自定义
-        outputname="output.xls"
+        outputname="OutputCompanyInfor.xls"
         excel.finishExcel(outputname)
 
         #写入完毕，提交mysql
         mysql.finishInsertMysql()
-# TODO ui
 
