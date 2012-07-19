@@ -2,6 +2,7 @@
 
 import threading
 from bs4 import BeautifulSoup
+import gui
 from reaper import logger
 from reaper.constants import HEADERS, COMMON_HEADERS
 from urllib3.connectionpool import HTTPConnectionPool
@@ -118,21 +119,26 @@ class CorpItem(object):
                     return
 
                 try:
+                    if gui.misc.STOP_CLICKED:
+                        return
+
                     request = urllib2.Request(self.website, headers=COMMON_HEADERS)
                     response = urllib2.urlopen(request)
                     self.logger.info('正在连接 %s' % self.website)
                     if response:
                         data = response.read()
-                        _matches = CorpItem.ENCODING_PATTERN.search(data)
-                        if _matches:
-                            encoding = _matches.group(1)
-                            self.logger.warning('%s首页检测到编码信息: %s', self._website_title, encoding)
-                            soup = BeautifulSoup(data, 'lxml', from_encoding=encoding)
-                        else:
-                            encoding = ''
-                            soup = BeautifulSoup(data, 'lxml')
+                        # _matches = CorpItem.ENCODING_PATTERN.search(data)
+                        # if _matches:
+                        #     encoding = _matches.group(1)
+                        #     self.logger.warning('%s首页检测到编码信息: %s', self._website_title, encoding)
+                        #     soup = BeautifulSoup(data, 'lxml', from_encoding=encoding)
+                        # else:
+                        #     encoding = ''
+                        #     soup = BeautifulSoup(data, 'lxml')
+                        soup = BeautifulSoup(data, 'lxml')
                         title = soup.head.title.get_text()
-                        self._website_title = (title.decode(encoding) if encoding else title).encode('utf-8')
+                        # self._website_title = (title.decode(encoding) if encoding else title).encode('utf-8')
+                        self._website_title = title.encode('utf-8')
                         if (not self._website_title) or ('全球最丰富的供应信息 尽在阿里巴巴' in self._website_title):
                             return
                     else:
