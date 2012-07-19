@@ -51,11 +51,12 @@ def get_estimate_item_amount(keyword, city_id, pool, logger, max_retry=15):
                 return int(matches.group(1))
         logger.info('soqi.cn返回空网页，重试')
 
+        retry += 1
+
     return -1
 
 
 if __name__ == '__main__':
-    print list(take(['130100', '130200', '130300', '130400', '130500', '130600', '130700', '130800', '130900', '131000', '131100', '140100', '140200', '140300', '140400', '140500', '140600', '140700', '140800', '140900', '141000', '141100'], 5))
     print get_estimate_item_amount('公司', '110000', HTTPConnectionPool('www.soqi.cn', headers=HEADERS), logger=reaper.logger)
     print get_estimate_item_amount('厂', '120000', HTTPConnectionPool('www.soqi.cn', headers=HEADERS), logger=reaper.logger)
 

@@ -2,6 +2,7 @@
 
 import urllib
 from bs4 import BeautifulSoup
+import gui
 from reaper.constants import REQUIRED_SUFFIXES
 from reaper.corp_obj import CorpItem
 from reaper import misc
@@ -14,6 +15,8 @@ def _grab(keyword, page_number, pool, city_code='100000', logger=None, predicate
     city_code: 城市号
     predicate: 过滤所用的谓词
     返回: 过滤好的，所抓取的CorpItem对象列表"""
+    if gui.misc.STOP_CLICKED:
+        return
 
     if not predicate: # 默认的谓词检测公司名是否以keyword结尾，并且CorpItem对象要有主页（不一定可用）
         _p1 = lambda item: item.website and ('alibaba' not in item.website) and ('hc360' not in item.website)
@@ -65,6 +68,9 @@ def grab(keyword, pool, pages, city_code='100000', logger=None, predicate=None):
     抛出: 页面号，是否是空页面的变量，所抓取的CorpItem对象列表
     # 参数与_grab相同，略"""
     for page in pages:
+        if gui.misc.STOP_CLICKED:
+            break
+
         is_empty_page, grabbed = _grab(keyword, page, pool, city_code=city_code, logger=logger, predicate=predicate)
 
         yield page, is_empty_page, grabbed # 考虑到效率，提供收集完所有所需信息再写入的可能性
