@@ -4,6 +4,7 @@ import functools
 from threading import Thread
 import threading
 import time
+import gui
 from reaper import misc
 import reaper
 from reaper.misc import partition
@@ -13,23 +14,32 @@ from reaper.spider import grab
 from urllib3.connectionpool import HTTPConnectionPool
 import insert.mysql
 import insert.excel
+from gui.misc import STOP_CLICKED
 the_lock = threading.RLock()
 
 
 
-def _start_multi_threading(per_thread_func, per_thread_args):
+def _start_multi_threading(per_thread_func, per_thread_args, flags):
     """启动线程的函数
     per_thread_func: 对于每个线程来说的主函数
     per_thread_args: 应用到主函数上的参数列表"""
     threads = []
 
-    for args in per_thread_args:
-        threads.append(Thread(target=per_thread_func, args=args))
+    def _(item, args):
+        flags[item] = False
+        per_thread_func(*args)
+        flags[item] = True
+
+    for item, args in enumerate(per_thread_args):
+        if gui.misc.STOP_CLICKED:
+            return
+
+        threads.append(Thread(target=_, args=(item, args)))
         threads[-1].start()
 
-    # for thread in threads:
-    #     # 阻塞以免程序退出
-    #     thread.join()
+    for thread in threads:
+        # 阻塞以免程序退出
+        thread.join(600)
 
 
 def start_multi_threading(
@@ -66,10 +76,13 @@ def start_multi_threading(
     set_diff = set_all
 
     while set_diff:
+        if gui.misc.STOP_CLICKED:
+            return
+
         if retry > max_retry:
             break
 
-        logger.info('remaining %s pages: %s, retry: %s', len(set_diff), sorted(set_diff), retry)
+        logger.info('%s %s remaining %s pages: %s, retry: %s', keyword, city_code, len(set_diff), sorted(set_diff), retry)
 
         grabbed_page_list = []
         def per_thread(*pages):
@@ -88,12 +101,14 @@ def start_multi_threading(
                 predicate=predicate
             ) # 注意grabber是一个生成器
             for page, is_empty_page, grabbed_items in grabber:
+                if gui.misc.STOP_CLICKED:
+                    return
+
                 if not is_empty_page:
                     grabbed_page_list.append(page)
                     if container:
                         container.extend(grabbed_items)
                     content_man.register_objects(grabbed_items)
-
 
         # 平均分配任务，其中by的算法是对总数÷线程数之后向上取整，可以保证分配出的子方案数小于线程数
         amount = max(set_diff) - min(set_diff)
@@ -103,7 +118,8 @@ def start_multi_threading(
         per_thread_args = partition(list(set_diff), by=by)
         logger.debug('allocated scheme %s', per_thread_args)
 
-        _start_multi_threading(per_thread, per_thread_args)
+        flags = [False for _ in range(len(per_thread_args))]
+        _start_multi_threading(per_thread, per_thread_args, flags)
 
         # 对本轮抓取到的页面号进行差分，得到还未抓取的页面号，存储在set_diff中
         set_diff -= set(grabbed_page_list)
@@ -148,7 +164,7 @@ if __name__ == '__main__':
     with open(str(int(time.time() * 100)) + '.txt', 'w') as ff:
         cont_man = ContentManager(functools.partial(transact, file_obj=ff))
         start_multi_threading('公司', (1, 5),thread_num=1,content_man=cont_man, max_retry=15, logger=reaper.logger)
-        cont_man.join_all()
+        cont_man
 
         #写入完毕，保存excel ,输出文件名可以自定义
         outputname="OutputCompanyInfor.xls"

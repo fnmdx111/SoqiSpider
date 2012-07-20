@@ -1,5 +1,7 @@
+# encoding: utf-8
 import threading
 import time
+import gui
 
 class ContentManager(object):
     def __init__(self, func):
@@ -12,9 +14,13 @@ class ContentManager(object):
     def _gen_thread_func(self):
         def func():
             while self.objects:
-                thread = threading.Thread(target=self.func, args=(self.objects.pop(0),))
-                thread.start()
-                self.threads.append(thread)
+                if gui.misc.STOP_CLICKED:
+                    return
+                self.func(self.objects.pop(0))
+
+                # thread = threading.Thread(target=self.func, args=(self.objects.pop(0),))
+                # thread.start()
+                # self.threads.append(thread)
 
         return func
 
@@ -22,17 +28,24 @@ class ContentManager(object):
     def register_objects(self, objects):
         self.objects.extend(objects)
 
+        if gui.misc.STOP_CLICKED:
+            print gui.misc.STOP_CLICKED
+            return
+
         if not (self.thread and self.thread.is_alive()):
             self.thread = threading.Thread(target=self._gen_thread_func(), args=())
             self.thread.start()
 
 
-    def join_all(self):
-        self.thread.join()
+    #def join_all(self):
+    #     self.thread.join()
 
-        for thread in self.threads:
-            if thread.is_alive():
-                thread.join()
+    #     for thread in self.threads:
+    #         if gui.misc.STOP_CLICKED:
+    #             return
+
+    #         if thread.is_alive():
+    #             thread.join()
 
 
 

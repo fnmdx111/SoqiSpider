@@ -5,6 +5,7 @@ from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 import sys
 import time
+import gui
 from gui.misc import LoggerHandler, ParameterSet, THREAD_AMOUNT_SAFE, ITEM_DENSITY, SUBTHREAD_AMOUNT
 from reaper.misc import take, get_estimate_item_amount
 from reaper.constants import REQUIRED_SUFFIXES, AUTO
@@ -155,45 +156,52 @@ class Form(QDialog, object):
         def _(params):
             cont_man = ContentManager(self.transactor_func)
             for param in params:
-                self.logger.debug('\n'.join([str(p) for p in params]))
-                if param.to_page == AUTO:
-                    self.logger.info('auto to_page detected... getting amount estimation')
-                    item_amount = get_estimate_item_amount(param.keyword, param.city_id, conn_pool, self.logger)
-                    if item_amount > 0:
-                        param.to_page = int(item_amount / ITEM_DENSITY) + 1
-                    else:
-                        param.to_page = 2000
-                    self.logger.info('total items: %s, estimated to_page: %s', item_amount, param.to_page)
+                for keyword in map(lambda item: unicode(item.text()).encode('utf-8'), self.get_checked_keywords()):
+                    if gui.misc.STOP_CLICKED:
+                        return
 
-                self.logger.info(
-                    'keyword %s, city %s, (%d, %d) starting',
-                    param.keyword, param.city_id,
-                    param.from_page, param.to_page
-                )
+                    if param.to_page == AUTO:
+                        self.logger.info('auto to_page detected... getting amount estimation')
+                        item_amount = get_estimate_item_amount(keyword, param.city_id, conn_pool, self.logger)
+                        if item_amount > 0:
+                            param.to_page = int(item_amount / ITEM_DENSITY) + 1
+                        else:
+                            param.to_page = 2000
+                        self.logger.info('total items: %s, estimated to_page: %s', item_amount, param.to_page)
 
-                start_multi_threading( # 这个函数开启thread_num个线程
-                    param.keyword,
-                    (param.from_page, param.to_page),
-                    city_code=param.city_id,
-                    content_man=cont_man,
-                    max_retry=15,
-                    thread_num=SUBTHREAD_AMOUNT,
-                    logger=self.logger
-                )
+                    self.logger.info(
+                        'keyword %s, city %s, (%d, %d) starting',
+                        keyword, param.city_id,
+                        param.from_page, param.to_page
+                    )
 
-            cont_man.join_all()
+                    start_multi_threading( # 这个函数开启thread_num个线程
+                        keyword,
+                        (param.from_page, param.to_page),
+                        city_code=param.city_id,
+                        content_man=cont_man,
+                        max_retry=15,
+                        thread_num=THREAD_AMOUNT_SAFE,
+                        logger=self.logger
+                    )
+
+            # cont_man.join_all()
 
             self.emit(SIGNAL('jobFinished()'))
 
         def dummy():
-            self.logger.debug('will take %s params each time', int(self.thread_amount / SUBTHREAD_AMOUNT))
+            self.logger.info('will take %s params each time', int(self.thread_amount / SUBTHREAD_AMOUNT))
 
             for sub_params in take(parameters, by=int(self.thread_amount / SUBTHREAD_AMOUNT)): # e.g. by=300 / 20 = 15 即一次并发抓取15个city_id
-                self.logger.info('当前并发抓取的id为: %s', map(lambda item: item.city_id, sub_params))
-                transactor_thread = threading.Thread(target=_, args=(sub_params,)) # 这个线程开启THREAD_AMOUNT_SAFE个线程
-                transactor_thread.setDaemon(True)
-                transactor_thread.start()
-                transactor_thread.join() # 阻塞，防止一次启动多个抓取主线程，吃不消
+                if gui.misc.STOP_CLICKED:
+                    return
+
+                _(sub_params)
+                # self.logger.info('当前并发抓取的id为: %s', map(lambda item: item.city_id + ' ' + item.keyword, sub_params))
+                # transactor_thread = threading.Thread(target=_, args=(sub_params,)) # 这个线程开启THREAD_AMOUNT_SAFE个线程
+                # transactor_thread.setDaemon(True)
+                # transactor_thread.start()
+                # transactor_thread.join() # 阻塞，防止一次启动多个抓取主线程，吃不消
 
         t = threading.Thread(target=dummy)
         t.setDaemon(True)
@@ -201,11 +209,10 @@ class Form(QDialog, object):
 
 
     def prepare_parameters(self):
-        def _prepare_parameters(start_id, end_id, from_page, to_page, checked_keywords):
+        def _prepare_parameters(start_id, end_id, from_page, to_page):
             params = []
             for city_id in get_ids(start_id, end_id):
-                for keyword in checked_keywords:
-                    params.append(ParameterSet(keyword, (from_page, to_page), city_id))
+                    params.append(ParameterSet((from_page, to_page), city_id))
 
             return params
 
@@ -233,8 +240,7 @@ class Form(QDialog, object):
         )
 
         return _prepare_parameters(
-            start_id, end_id, int(from_page), int(to_page),
-            map(lambda item: unicode(item.text()).encode('utf-8'), self.get_checked_keywords()))
+            start_id, end_id, int(from_page), int(to_page))
 
 
     def has_valid_inputs(self):
@@ -265,14 +271,21 @@ class Form(QDialog, object):
 
 
     def btn_start_click(self):
-        self.logger.debug(
-            '%s checked',
-            ' '.join(map(lambda item: unicode(item.text()).encode('utf-8'), self.get_checked_keywords())))
+        gui.misc.STOP_CLICKED = not gui.misc.STOP_CLICKED
 
-        if not self.has_valid_inputs():
-            return
+        if not gui.misc.STOP_CLICKED:
+            self.logger.debug(
+                '%s checked',
+                ' '.join(map(lambda item: unicode(item.text()).encode('utf-8'), self.get_checked_keywords())))
 
-        self.start_threads(self.prepare_parameters())
+            if not self.has_valid_inputs():
+                return
+
+            self.btn_start.setText(u'停止')
+            self.start_threads(self.prepare_parameters())
+        else:
+            self.logger.warning('stop clicked')
+            self.btn_start.setText(u'开始')
 
 
 # TODO implement config file mechanism
