@@ -20,7 +20,7 @@ class Form(QDialog, object):
     _CheckBox_keyword_names = map(lambda item: 'cb_' + item, ['company', 'factory', 'corp', 'center', 'inst'])
     _LineEdit_names = map(lambda item: 'le_' + item, ['start_id', 'end_id', 'from_page', 'to_page', 'thread_amount'])
 
-    def __init__(self, transactor_func, parameters=None, parent=None, config=None):
+    def __init__(self, transactor_func, destroyer_func=None, parameters=None, parent=None, config=None):
         super(Form, self).__init__(parent, )
 
         self.resize(640, 400)
@@ -75,6 +75,7 @@ class Form(QDialog, object):
         self.parameters = parameters
 
         self.transactor_func = transactor_func
+        self.destroyer_func = destroyer_func
 
 
     def active_thread_count_changed(self, count):
@@ -291,6 +292,37 @@ class Form(QDialog, object):
         else:
             self.logger.warning('stop clicked')
             self.btn_start.setText(u'开始')
+
+
+    def closeEvent(self, event):
+        def _ask_and_handle(msg_title, msg_body):
+            reply = QMessageBox.question(
+                self,
+                msg_title,
+                msg_body,
+                QMessageBox.Yes,
+                QMessageBox.No
+            )
+            if reply == QMessageBox.Yes:
+                event.accept()
+            else:
+                event.ignore()
+
+        try:
+            if self.destroyer_func:
+                self.destroyer_func()
+                event.accept()
+            if threading.active_count() > 20:
+                _ask_and_handle(
+                    u'仍然退出？',
+                    u'检测到活动线程数大于20，如果仍然退出可能会崩溃'
+                )
+        except BaseException as e:
+            _ask_and_handle(
+                u'出错了',
+                u'发生了如下错误\n%s\n是否退出' % e,
+            )
+
 
 
 if __name__ == '__main__':
