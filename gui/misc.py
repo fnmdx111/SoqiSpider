@@ -63,12 +63,9 @@ class ConfigReader(object):
 
 
     def to_dict(self):
-        return dict(
-            zip(
-                ConfigReader.attrs,
-                map(
-                    lambda attr: self.__getattribute__(attr),
-                    ConfigReader.attrs)))
+        return dict(zip(ConfigReader.attrs,
+                        map(lambda attr: self.__getattribute__(attr),
+                            ConfigReader.attrs)))
 
 template = '''<?xml version="1.0" encoding="utf-8"?>
 <configuration>

@@ -197,8 +197,6 @@ class Form(QDialog, object):
             self.emit(SIGNAL('jobFinished()'))
 
         def dummy():
-            self.logger.info('will take %s params each time', int(self.thread_amount / SUBTHREAD_AMOUNT))
-
             for sub_params in take(parameters, by=int(self.thread_amount / SUBTHREAD_AMOUNT)): # e.g. by=300 / 20 = 15 即一次并发抓取15个city_id
                 if gui.misc.STOP_CLICKED:
                     return
@@ -295,8 +293,6 @@ class Form(QDialog, object):
             self.btn_start.setText(u'开始')
 
 
-# TODO implement config file mechanism
-# TODO implement stop threading mechanism
 if __name__ == '__main__':
     with open(str(int(time.time() * 100)) + '.txt', 'w') as ff:
         the_lock = threading.RLock()
