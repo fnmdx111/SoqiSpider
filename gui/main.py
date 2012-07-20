@@ -6,7 +6,7 @@ from PyQt4.QtCore import *
 import sys
 import time
 import gui
-from gui.misc import LoggerHandler, ParameterSet, THREAD_AMOUNT_SAFE, ITEM_DENSITY, SUBTHREAD_AMOUNT
+from gui.misc import LoggerHandler, ParameterSet, THREAD_AMOUNT_SAFE, ITEM_DENSITY, SUBTHREAD_AMOUNT, ConfigReader
 from reaper.misc import take, get_estimate_item_amount
 from reaper.constants import REQUIRED_SUFFIXES, AUTO
 from reaper.content_man import ContentManager
@@ -20,7 +20,7 @@ class Form(QDialog, object):
     _CheckBox_keyword_names = map(lambda item: 'cb_' + item, ['company', 'factory', 'corp', 'center', 'inst'])
     _LineEdit_names = map(lambda item: 'le_' + item, ['start_id', 'end_id', 'from_page', 'to_page', 'thread_amount'])
 
-    def __init__(self, transactor_func, parameters=None, parent=None):
+    def __init__(self, transactor_func, parameters=None, parent=None, config=None):
         super(Form, self).__init__(parent, )
 
         self.resize(640, 400)
@@ -53,6 +53,13 @@ class Form(QDialog, object):
         self.connect(self.logger_widget, SIGNAL('newLog(QString)'), self.new_log)
         self.connect(self, SIGNAL('jobFinished()'), self.grabbing_finished)
         self.connect(self, SIGNAL('activeThreadCountChanged(int)'), self.active_thread_count_changed)
+
+        if config:
+            map(lambda (attr, widget): widget.setText(attr),
+                zip(map(lambda attr: config.__getattribute__(attr),
+                        ConfigReader.attrs[:-2]),
+                    map(lambda attr: self.__getattribute__(attr),
+                        Form._LineEdit_names)))
 
         def active_thread_counter():
             current_count = threading.active_count()
@@ -190,8 +197,6 @@ class Form(QDialog, object):
             self.emit(SIGNAL('jobFinished()'))
 
         def dummy():
-            self.logger.info('will take %s params each time', int(self.thread_amount / SUBTHREAD_AMOUNT))
-
             for sub_params in take(parameters, by=int(self.thread_amount / SUBTHREAD_AMOUNT)): # e.g. by=300 / 20 = 15 即一次并发抓取15个city_id
                 if gui.misc.STOP_CLICKED:
                     return
@@ -288,8 +293,6 @@ class Form(QDialog, object):
             self.btn_start.setText(u'开始')
 
 
-# TODO implement config file mechanism
-# TODO implement stop threading mechanism
 if __name__ == '__main__':
     with open(str(int(time.time() * 100)) + '.txt', 'w') as ff:
         the_lock = threading.RLock()
@@ -302,7 +305,7 @@ if __name__ == '__main__':
 
 
         app = QApplication(sys.argv)
-        form = Form(transact)
+        form = Form(transact, config=ConfigReader(gui.misc.template))
         form.show()
         app.exec_()
 
