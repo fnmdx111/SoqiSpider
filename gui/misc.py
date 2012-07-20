@@ -1,6 +1,7 @@
 # encoding: utf-8
 from logging import Handler
 from PyQt4.QtCore import *
+from bs4 import BeautifulSoup
 
 
 THREAD_AMOUNT_SAFE = 200
@@ -40,5 +41,58 @@ class ParameterSet(object):
         return ' '.join(map(str, [self.from_page, self.to_page, self.city_id]))
 
 
+
+
+class ConfigReader(object):
+
+    attrs = ('start_id', 'end_id', 'from_page', 'to_page', 'thread_amount', 'desc_length', 'sql_conn')
+    keys = ('startID', 'endID', 'startPage', 'endPage', 'threadAmount', 'descriptionLength', 'MySQLConnectionString')
+
+    def __init__(self, config_file):
+        self.config_file = config_file
+        self.read_config()
+
+
+    def read_config(self):
+        soup = BeautifulSoup(self.config_file)
+        def _extract(key):
+            tag = soup.find(name='add', attrs={'key': key})
+            return tag['value'] if tag else ''
+
+        map(lambda (attr, key): self.__setattr__(attr, _extract(key)), zip(ConfigReader.attrs, ConfigReader.keys))
+
+
+    def to_dict(self):
+        return dict(
+            zip(
+                ConfigReader.attrs,
+                map(
+                    lambda attr: self.__getattribute__(attr),
+                    ConfigReader.attrs)))
+
+template = '''<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <appSettings>
+    <!--采集方式：0:继续  1：重新-->
+    <add key="spiderType" value="0" />
+    <!--开始ID-->
+    <add key="startID" value="349" />
+    <!--结束ID-->
+    <add key="endID" value="350" />
+    <add key="startPage" value="1" />
+    <add key="endPage" value="" />
+    <add key="threadAmount" value="" />
+    <!--网站描述字符串长度-->
+    <add key="descriptionLength" value="250" />
+    <!--数据库文件设置
+    <add key="MySQLConnectionString" value="\data\company.db3" /> -->
+  </appSettings>
+</configuration>'''
+
+if __name__ == '__main__':
+    reader = ConfigReader(template)
+
+    for item in reader.to_dict().items():
+        print item
 
 

@@ -14,6 +14,7 @@ from reaper.spider import grab
 from urllib3.connectionpool import HTTPConnectionPool
 import insert.mysql
 import insert.excel
+from gui.misc import STOP_CLICKED
 the_lock = threading.RLock()
 
 
@@ -163,7 +164,7 @@ if __name__ == '__main__':
     with open(str(int(time.time() * 100)) + '.txt', 'w') as ff:
         cont_man = ContentManager(functools.partial(transact, file_obj=ff))
         start_multi_threading('公司', (1, 5),thread_num=1,content_man=cont_man, max_retry=15, logger=reaper.logger)
-        cont_man.join_all()
+        # cont_man.join_all()
 
         #写入完毕，保存excel ,输出文件名可以自定义
         outputname="OutputCompanyInfor.xls"
