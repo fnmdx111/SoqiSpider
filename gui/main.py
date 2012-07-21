@@ -8,7 +8,7 @@ import time
 import gui
 from gui.misc import LoggerHandler, ParameterSet, THREAD_AMOUNT_SAFE, ITEM_DENSITY, SUBTHREAD_AMOUNT, ConfigReader
 from reaper.misc import take, get_estimate_item_amount
-from reaper.constants import REQUIRED_SUFFIXES, AUTO
+from reaper.constants import REQUIRED_SUFFIXES, AUTO, HEADERS
 from reaper.content_man import ContentManager
 from reaper.grab import start_multi_threading
 from reaper.id_gen import get_ids
@@ -20,7 +20,7 @@ class Form(QDialog, object):
     _CheckBox_keyword_names = map(lambda item: 'cb_' + item, ['company', 'factory', 'corp', 'center', 'inst'])
     _LineEdit_names = map(lambda item: 'le_' + item, ['start_id', 'end_id', 'from_page', 'to_page', 'thread_amount'])
 
-    def __init__(self, transactor_func, parameters=None, parent=None, config=None):
+    def __init__(self, transactor_func, destroyer_func=None, parameters=None, parent=None, config=None):
         super(Form, self).__init__(parent, )
 
         self.resize(640, 400)
@@ -51,7 +51,7 @@ class Form(QDialog, object):
 
         self.connect(self.btn_start, SIGNAL('clicked()'), self.btn_start_click)
         self.connect(self.logger_widget, SIGNAL('newLog(QString)'), self.new_log)
-        self.connect(self, SIGNAL('jobFinished()'), self.grabbing_finished)
+        self.connect(self, SIGNAL('jobFinished(QString)'), self.grabbing_finished)
         self.connect(self, SIGNAL('activeThreadCountChanged(int)'), self.active_thread_count_changed)
 
         if config:
@@ -75,6 +75,7 @@ class Form(QDialog, object):
         self.parameters = parameters
 
         self.transactor_func = transactor_func
+        self.destroyer_func = destroyer_func
 
 
     def active_thread_count_changed(self, count):
@@ -136,8 +137,8 @@ class Form(QDialog, object):
         return h_layout
 
 
-    def grabbing_finished(self):
-        self.logger_widget.append('<b><font color="green">job %s done</font></b>' % self._param)
+    def grabbing_finished(self, job_identity):
+        self.logger_widget.append('<b><font color="green">job %s done</font></b>' % job_identity)
 
 
     def new_log(self, s):
@@ -158,7 +159,7 @@ class Form(QDialog, object):
         # 单位时间总线程数: THREAD_AMOUNT_SAFE * thread_num + 企业数 / C < 500
         self.logger.debug('starting threads')
 
-        conn_pool = HTTPConnectionPool(host='www.soqi.cn')
+        conn_pool = HTTPConnectionPool(host='www.soqi.cn', headers=HEADERS)
 
         def _(params):
             cont_man = ContentManager(self.transactor_func)
@@ -194,7 +195,7 @@ class Form(QDialog, object):
 
             # cont_man.join_all()
 
-            self.emit(SIGNAL('jobFinished()'))
+            self.emit(SIGNAL('jobFinished(QString)'), QString('%s to %s' % (params[0].city_id, params[-1].city_id)))
 
         def dummy():
             for sub_params in take(parameters, by=int(self.thread_amount / SUBTHREAD_AMOUNT)): # e.g. by=300 / 20 = 15 即一次并发抓取15个city_id
@@ -262,6 +263,9 @@ class Form(QDialog, object):
         from_page, to_page = _get_texts(('le_from_page', 'le_to_page'))
         if from_page.isdigit():
             if to_page.isdigit():
+                if int(to_page) > 2000:
+                    self.logger.error('结束页必须小于等于2000')
+                    return False
                 if from_page > to_page:
                     self.logger.error('起始页必须小于等于结束页')
                     return False
@@ -291,6 +295,37 @@ class Form(QDialog, object):
         else:
             self.logger.warning('stop clicked')
             self.btn_start.setText(u'开始')
+
+
+    def closeEvent(self, event):
+        def _ask_and_handle(msg_title, msg_body):
+            reply = QMessageBox.question(
+                self,
+                msg_title,
+                msg_body,
+                QMessageBox.Yes,
+                QMessageBox.No
+            )
+            if reply == QMessageBox.Yes:
+                event.accept()
+            else:
+                event.ignore()
+
+        try:
+            if self.destroyer_func:
+                self.destroyer_func()
+                event.accept()
+            if threading.active_count() > 20:
+                _ask_and_handle(
+                    u'仍然退出？',
+                    u'检测到活动线程数大于20，如果仍然退出可能会崩溃'
+                )
+        except BaseException as e:
+            _ask_and_handle(
+                u'出错了',
+                u'发生了如下错误\n%s\n是否退出' % e,
+            )
+
 
 
 if __name__ == '__main__':
