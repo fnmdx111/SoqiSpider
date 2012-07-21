@@ -1,3 +1,5 @@
-*.pyc
+*.py[cod]
 workspace.xml
 *.txt
+*.exe
+*.xls
