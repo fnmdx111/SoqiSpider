@@ -43,6 +43,7 @@ class Form(QDialog, object):
                     (lambda: exit(), lambda: None)
                 )
 
+        self.setWindowTitle(u'soqi.cn爬虫')
         self.resize(640, 400)
 
         self.logger_widget = QTextBrowser()
@@ -110,7 +111,6 @@ class Form(QDialog, object):
         self.le_to_page.companion = self.le_from_page
 
         self._start_thread_counter()
-
 
 
     def editing_finished(self):
