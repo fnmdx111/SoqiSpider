@@ -73,9 +73,9 @@ template = '''<?xml version="1.0" encoding="utf-8"?>
     <!--采集方式：0:继续  1：重新-->
     <add key="spiderType" value="0" />
     <!--开始ID-->
-    <add key="startID" value="349" />
+    <add key="startID" value="110101" />
     <!--结束ID-->
-    <add key="endID" value="350" />
+    <add key="endID" value="110102" />
     <add key="startPage" value="1" />
     <add key="endPage" value="" />
     <add key="threadAmount" value="" />
