@@ -4,7 +4,7 @@ from PyQt4.QtCore import *
 from bs4 import BeautifulSoup
 
 
-THREAD_AMOUNT_SAFE = 200
+THREAD_AMOUNT_SAFE = 500
 SUBTHREAD_AMOUNT = 20
 
 STOP_CLICKED = True
@@ -50,16 +50,20 @@ class ConfigReader(object):
 
     def __init__(self, config_file):
         self.config_file = config_file
-        self.read_config()
 
 
     def read_config(self):
-        soup = BeautifulSoup(self.config_file)
-        def _extract(key):
-            tag = soup.find(name='add', attrs={'key': key})
-            return tag['value'] if tag else ''
+        map(lambda (attr, value): self.__setattr__(attr, value),
+            zip(ConfigReader.attrs,
+                ('100000', '200000', '1', '', '', '250', r'db\company.db3')))
 
-        map(lambda (attr, key): self.__setattr__(attr, _extract(key)), zip(ConfigReader.attrs, ConfigReader.keys))
+        with open(self.config_file, 'r') as f:
+            soup = BeautifulSoup(f.read())
+            def _extract(key):
+                tag = soup.find(name='add', attrs={'key': key})
+                return tag['value'] if tag else ''
+
+            map(lambda (attr, key): self.__setattr__(attr, _extract(key)), zip(ConfigReader.attrs, ConfigReader.keys))
 
 
     def to_dict(self):
@@ -77,7 +81,7 @@ template = '''<?xml version="1.0" encoding="utf-8"?>
     <!--结束ID-->
     <add key="endID" value="110102" />
     <add key="startPage" value="1" />
-    <add key="endPage" value="" />
+    <add key="endPage" value="80000" />
     <add key="threadAmount" value="" />
     <!--网站描述字符串长度-->
     <add key="descriptionLength" value="250" />

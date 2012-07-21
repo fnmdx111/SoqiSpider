@@ -1,18 +1,10 @@
 # encoding: utf-8
-import logging
 import threading
 from PyQt4.QtGui import *
-from PyQt4.QtCore import *
 import sys
 import time
 import gui
-from gui.misc import LoggerHandler, ParameterSet, THREAD_AMOUNT_SAFE, ITEM_DENSITY, SUBTHREAD_AMOUNT, ConfigReader
-from reaper.misc import take, get_estimate_item_amount
-from reaper.constants import REQUIRED_SUFFIXES, AUTO
-from reaper.content_man import ContentManager
-from reaper.grab import start_multi_threading
-from reaper.id_gen import get_ids
-from urllib3.connectionpool import HTTPConnectionPool
+from gui.misc import ConfigReader
 from gui.main import *
 import insert.excel
 import insert.mysql

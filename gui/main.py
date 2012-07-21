@@ -1,4 +1,5 @@
 # encoding: utf-8
+from functools import partial
 import logging
 import threading
 from PyQt4.QtGui import *
@@ -14,14 +15,33 @@ from reaper.grab import start_multi_threading
 from reaper.id_gen import get_ids
 from urllib3.connectionpool import HTTPConnectionPool
 
+logging.basicConfig(
+    format='',
+)
+
 
 class Form(QDialog, object):
 
     _CheckBox_keyword_names = map(lambda item: 'cb_' + item, ['company', 'factory', 'corp', 'center', 'inst'])
     _LineEdit_names = map(lambda item: 'le_' + item, ['start_id', 'end_id', 'from_page', 'to_page', 'thread_amount'])
 
-    def __init__(self, transactor_func, destroyer_func=None, parameters=None, parent=None, config=None):
-        super(Form, self).__init__(parent, )
+    def __init__(self, transactor_func, initializer_func=None, destroyer_func=None, parameters=None, parent=None, config=None):
+        self.parameters = parameters
+        self.transactor_func = transactor_func
+        self.destroyer_func = destroyer_func
+
+        super(Form, self).__init__(parent)
+
+        if initializer_func:
+            try:
+                initializer_func()
+            except BaseException as e:
+                Form._ask_and_handle(
+                    self,
+                    (u'出错了',
+                     u'发生了如下错误\n%s\n是否退出' % e),
+                    (lambda: exit(), lambda: None)
+                )
 
         self.resize(640, 400)
 
@@ -37,9 +57,15 @@ class Form(QDialog, object):
         layout.addWidget(self.logger_widget)
         self.setLayout(layout)
 
-        logging.basicConfig(
-            format='',
-        )
+        self.cb_company.setChecked(True)
+
+        self.connect(self.btn_start, SIGNAL('clicked()'), self.btn_start_click)
+        self.connect(self.logger_widget, SIGNAL('newLog(QString)'), self.new_log)
+        self.connect(self, SIGNAL('jobFinished(QString)'), self.grabbing_finished)
+        self.connect(self, SIGNAL('activeThreadCountChanged(int)'), self.active_thread_count_changed)
+        self._connect_LineEdit_signals() # 对QLineEdit绑定textChanged信号，对输入是否合法进行检测
+        for widget in [self.le_end_id, self.le_to_page]:
+            self.connect(widget, SIGNAL('editingFinished()'), self.editing_finished)
 
         self.logger = logging.getLogger(__name__)
         handler = LoggerHandler(self.logger_widget)
@@ -49,18 +75,61 @@ class Form(QDialog, object):
         ))
         self.logger.addHandler(handler)
 
-        self.connect(self.btn_start, SIGNAL('clicked()'), self.btn_start_click)
-        self.connect(self.logger_widget, SIGNAL('newLog(QString)'), self.new_log)
-        self.connect(self, SIGNAL('jobFinished(QString)'), self.grabbing_finished)
-        self.connect(self, SIGNAL('activeThreadCountChanged(int)'), self.active_thread_count_changed)
+        if config: # 必须在QLineEdit控件的信号绑定完毕之后再将config写入，以利用restrict_content检测不合法的输入
+            flag = '默认'
+            try:
+                config.read_config()
+                flag = '文件'
+            except IOError:
+                gui.misc.STOP_CLICKED = False
+                self.logger.warning('找不到Spider.exe.config，使用默认配置')
+                gui.misc.STOP_CLICKED = True
+            finally:
+                attrs = ['end_id', 'start_id', 'to_page', 'from_page', 'thread_amount']
+                map(lambda (attr, widget): widget.setText(attr),
+                    zip(map(lambda attr: config.__getattribute__(attr),
+                            attrs),
+                        map(lambda attr: self.__getattribute__(attr),
+                            map(lambda x: 'le_' + x, attrs))))
+                gui.misc.STOP_CLICKED = False
+                self.logger.info('成功应用%s配置', flag)
+                gui.misc.STOP_CLICKED = True
 
-        if config:
-            map(lambda (attr, widget): widget.setText(attr),
-                zip(map(lambda attr: config.__getattribute__(attr),
-                        ConfigReader.attrs[:-2]),
-                    map(lambda attr: self.__getattribute__(attr),
-                        Form._LineEdit_names)))
+        def _add_attr(obj_name): # 根据QLineEdit中已有的内容，添加last_content标签，以便在检测到不合法的输入时回滚
+            obj = self.__getattribute__(obj_name)
+            cont = obj.text()
+            obj.last_content = cont
+            if cont:
+                if not unicode(cont).isdigit():
+                    obj.last_content = ''
+                    obj.setText(obj.last_content)
 
+        map(_add_attr, Form._LineEdit_names[:-1])
+
+        self.le_end_id.companion = self.le_start_id
+        self.le_to_page.companion = self.le_from_page
+
+        self._start_thread_counter()
+
+
+
+    def editing_finished(self):
+        companion = self.sender().companion
+        companion.emit(SIGNAL('textChanged(QString)'), companion.text())
+
+
+    def _connect_LineEdit_signals(self):
+        for item, ref_obj, maximum in zip((self.le_to_page, self.le_from_page, self.le_start_id, self.le_end_id),
+                                          (self.le_to_page, self.le_to_page,   self.le_end_id,   self.le_end_id),
+                                          ('2000',          AUTO,              AUTO,             '820000')):
+            self.connect(item,
+                         SIGNAL('textChanged(QString)'),
+                         partial(self.restrict_content,
+                                 ref_obj=ref_obj))
+            item.maximum = maximum
+
+
+    def _start_thread_counter(self):
         def active_thread_counter():
             current_count = threading.active_count()
             while True:
@@ -72,14 +141,24 @@ class Form(QDialog, object):
         th.setDaemon(True)
         th.start()
 
-        self.parameters = parameters
-
-        self.transactor_func = transactor_func
-        self.destroyer_func = destroyer_func
-
 
     def active_thread_count_changed(self, count):
-        self.setWindowTitle(u'soqi.cn爬虫 活跃线程数: %s' % count)
+        self.setWindowTitle(u'soqi.cn爬虫 活跃线程数: %s' % (count - 1))
+
+
+    def restrict_content(self, content, ref_obj):
+        maximum = self.sender().maximum
+        maximum = ref_obj.text() if maximum == AUTO else maximum
+        maximum = ref_obj.maximum if not maximum else maximum
+
+        content = unicode(content) # 从QString转换为unicode方便使用python basestring接口操作
+        if content:
+            if not content.isdigit():
+                self.sender().setText(self.sender().last_content)
+            elif maximum:
+                if int(content) > int(maximum):
+                    self.sender().setText(maximum)
+            self.last_to_page_content = self.le_to_page.text()
 
 
     def _gen_LineEdit_layout(self):
@@ -110,7 +189,7 @@ class Form(QDialog, object):
 
         for args in zip((u'起始id:', u'结束id:', u'起始页:', u'结束页:', u'线程数:'),
                         Form._LineEdit_names,
-                        (6, 6, 3, 3, 3),
+                        (6, 6, 4, 4, 3),
                         ('000000', '999999', '1', '', '')):
             h_layout.addLayout(apply(_gen_layout, args))
             h_layout.addStretch()
@@ -127,7 +206,7 @@ class Form(QDialog, object):
             map(lambda item: item.decode('utf-8'), REQUIRED_SUFFIXES)
         ):
             checkbox = QCheckBox(item)
-            checkbox.setChecked(True)
+            checkbox.setChecked(False)
             self.__setattr__(attr, checkbox)
             h_layout.addWidget(checkbox)
 
@@ -139,6 +218,8 @@ class Form(QDialog, object):
 
     def grabbing_finished(self, job_identity):
         self.logger_widget.append('<b><font color="green">job %s done</font></b>' % job_identity)
+        # self.btn_start.emit(SIGNAL('clicked()'))
+        self.btn_start_click()
 
 
     def new_log(self, s):
@@ -169,16 +250,16 @@ class Form(QDialog, object):
                         return
 
                     if param.to_page == AUTO:
-                        self.logger.info('auto to_page detected... getting amount estimation')
+                        self.logger.info('自动检测结束页... 正在获取粗略项目数量')
                         item_amount = get_estimate_item_amount(keyword, param.city_id, conn_pool, self.logger)
                         if item_amount > 0:
                             param.to_page = int(item_amount / ITEM_DENSITY) + 1
                         else:
                             param.to_page = 2000
-                        self.logger.info('total items: %s, estimated to_page: %s', item_amount, param.to_page)
+                        self.logger.info('总项目数量: %s, 估计结束页: %s', item_amount, param.to_page)
 
                     self.logger.info(
-                        'keyword %s, city %s, (%d, %d) starting',
+                        '开始: 关键字 %s, 城市号 %s, (%d, %d)',
                         keyword, param.city_id,
                         param.from_page, param.to_page
                     )
@@ -297,33 +378,38 @@ class Form(QDialog, object):
             self.btn_start.setText(u'开始')
 
 
-    def closeEvent(self, event):
-        def _ask_and_handle(msg_title, msg_body):
-            reply = QMessageBox.question(
-                self,
-                msg_title,
-                msg_body,
-                QMessageBox.Yes,
-                QMessageBox.No
-            )
-            if reply == QMessageBox.Yes:
-                event.accept()
-            else:
-                event.ignore()
+    @staticmethod
+    def _ask_and_handle(widget, (msg_title, msg_body), (yes_callback, no_callback)):
+        reply = QMessageBox.question(
+            widget,
+            msg_title,       msg_body,
+            QMessageBox.Yes, QMessageBox.No
+        )
+        if reply == QMessageBox.Yes:
+            yes_callback()
+        else:
+            no_callback()
 
+
+    def closeEvent(self, event):
+        callbacks = (lambda: event.accept(), lambda: event.ignore())
         try:
             if self.destroyer_func:
                 self.destroyer_func()
                 event.accept()
             if threading.active_count() > 20:
-                _ask_and_handle(
-                    u'仍然退出？',
-                    u'检测到活动线程数大于20，如果仍然退出可能会崩溃'
+                Form._ask_and_handle(
+                    self,
+                    (u'仍然退出？',
+                    u'检测到活动线程数大于20，如果仍然退出可能会崩溃'),
+                    callbacks
                 )
         except BaseException as e:
-            _ask_and_handle(
-                u'出错了',
-                u'发生了如下错误\n%s\n是否退出' % e,
+            Form._ask_and_handle(
+                self,
+                (u'出错了',
+                u'发生了如下错误\n%s\n是否退出' % e),
+                callbacks
             )
 
 
@@ -340,7 +426,8 @@ if __name__ == '__main__':
 
 
         app = QApplication(sys.argv)
-        form = Form(transact, config=ConfigReader(gui.misc.template))
+        form = Form(transact,
+                    config=ConfigReader('Spider.exe.config'),)
         form.show()
         app.exec_()
 

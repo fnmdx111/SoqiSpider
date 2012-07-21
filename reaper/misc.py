@@ -1,9 +1,7 @@
 # encoding: utf-8
 import urllib
 from bs4 import BeautifulSoup
-import reaper
-from reaper.constants import HEADERS, PATTERN_ITEM_AMOUNT
-from urllib3.connectionpool import HTTPConnectionPool
+from reaper.constants import PATTERN_ITEM_AMOUNT
 
 
 last_page_found = 0
@@ -56,7 +54,16 @@ def get_estimate_item_amount(keyword, city_id, pool, logger, max_retry=15):
     return -1
 
 
+def to_ellipsis(iterable):
+    if len(iterable) > 10:
+        return '[%s, %s, %s, ..., %s, %s]' % (iterable[0], iterable[1], iterable[2], iterable[-2], iterable[-1])
+    else:
+        return str(list(iterable))
+
+
+
 if __name__ == '__main__':
-    print get_estimate_item_amount('公司', '110000', HTTPConnectionPool('www.soqi.cn', headers=HEADERS), logger=reaper.logger)
-    print get_estimate_item_amount('厂', '120000', HTTPConnectionPool('www.soqi.cn', headers=HEADERS), logger=reaper.logger)
+    print to_ellipsis(range(1000))
+    # print get_estimate_item_amount('公司', '110000', HTTPConnectionPool('www.soqi.cn', headers=HEADERS), logger=reaper.logger)
+    # print get_estimate_item_amount('厂', '120000', HTTPConnectionPool('www.soqi.cn', headers=HEADERS), logger=reaper.logger)
 

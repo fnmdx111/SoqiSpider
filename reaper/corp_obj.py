@@ -148,7 +148,7 @@ class CorpItem(object):
                     response = CorpItem._soqi_conn_pool.request('GET', self.id_page)
                     if response:
                         self._introduction, self._product = CorpItem.get_corp_intro_and_product(BeautifulSoup(response.data, 'lxml'))
-                except URLError as e:
+                except URLError as _:
                     self.logger.warning('域名%s也许是过期了', self.website.__repr__())
                 except AttributeError as _:
                     self.logger.info('%s没有标题', self.website)

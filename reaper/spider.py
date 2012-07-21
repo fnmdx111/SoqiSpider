@@ -72,6 +72,8 @@ def grab(keyword, pool, pages, city_code='100000', logger=None, predicate=None):
             break
 
         is_empty_page, grabbed = _grab(keyword, page, pool, city_code=city_code, logger=logger, predicate=predicate)
+        if (not is_empty_page) and (not len(grabbed)):
+            logger.info('%s非空，但是没有符合条件的结果', page)
 
         yield page, is_empty_page, grabbed # 考虑到效率，提供收集完所有所需信息再写入的可能性
 

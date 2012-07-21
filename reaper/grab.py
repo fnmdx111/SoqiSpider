@@ -7,14 +7,13 @@ import time
 import gui
 from reaper import misc
 import reaper
-from reaper.misc import partition
+from reaper.misc import partition, to_ellipsis
 from reaper.constants import HEADERS
 from reaper.content_man import ContentManager
 from reaper.spider import grab
 from urllib3.connectionpool import HTTPConnectionPool
 import insert.mysql
 import insert.excel
-from gui.misc import STOP_CLICKED
 the_lock = threading.RLock()
 
 
@@ -82,7 +81,9 @@ def start_multi_threading(
         if retry > max_retry:
             break
 
-        logger.info('%s %s remaining %s pages: %s, retry: %s', keyword, city_code, len(set_diff), sorted(set_diff), retry)
+        logger.info('关键字: %s 城市号: %s 重试次数: %s\n还剩%s页: %s',
+                    keyword, city_code, retry,
+                    len(set_diff), to_ellipsis(sorted(set_diff)),)
 
         grabbed_page_list = []
         def per_thread(*pages):
@@ -128,6 +129,7 @@ def start_multi_threading(
         if misc.last_page_found:
             # 如果找到了最后一页的页码，则将剩余页码中大于等于它的去掉
             set_diff = set(filter(lambda x: x < misc.last_page_found, set_diff))
+            logger.info('检测到%s是最后一页', misc.last_page_found)
 
     logger.debug('escaped from while set_diff')
 
@@ -147,7 +149,7 @@ if __name__ == '__main__':
             insert.excel.insertToExcel(row=row,item=item)
 
             #写入mysql
-            insert.mysqlinserttoMysql(item.get_info_as_tuple())
+            insert.mysql.inserttoMysql(item.get_info_as_tuple())
 
             #写入txt
             file_obj.write(item.corp_name+"\n       ID:"+item.id+"\n       公司简介:"+item.introduction+"\n       主要产品关键词:"+item.product+"\n       网址:"+item.website+"\n       网址标题:"+item.website_title+'\n')

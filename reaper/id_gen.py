@@ -12,8 +12,8 @@ def get_adjacent_city_id(city_id, which_one=succ):
         return (item for item in f(city_list) if cmp(item, city_id)).next()
 
     _cond = {
-        succ: (lambda x: x, lambda item, id: item >= id),
-        prev: (reversed, lambda item, id: item <= id)
+        succ: (lambda x: x, lambda item, id: item > id),
+        prev: (reversed, lambda item, id: item < id)
     }
     return apply(_, _cond[which_one])
 
@@ -67,14 +67,13 @@ def get_ids(start, end):
     )
     counties_chunk2 = reduce_counties(counties_chunk2, end_city_id)
 
-    ids = itertools.chain(counties_chunk1, cities_chunk, counties_chunk2)
-
-    return ids
+    if start_city_id == end_city_id:
+        return set(counties_chunk1) & set(counties_chunk2)
+    else:
+        return itertools.chain(counties_chunk1, cities_chunk, counties_chunk2)
 
 
 if __name__ == '__main__':
-    print sorted(list(get_ids('123333', '144499')))
-    print len(sorted(list(get_ids('000000', '999999'))))
-    print len(cities)
+    print sorted(list(get_ids('653125', '653126')))
 
 
