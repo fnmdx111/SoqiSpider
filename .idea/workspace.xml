@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="7ca28858-e9a5-4619-a81a-c9693fe37f51" name="Default" comment="add main.py ,and insert to excel mysql &#10;#TODO destructor">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-    </list>
+    <list default="true" id="7ca28858-e9a5-4619-a81a-c9693fe37f51" name="Default" comment="add main.py ,and insert to excel mysql &#10;#TODO destructor" />
     <list id="a96b8c10-e854-4c5d-b136-1d54ebec62b4" name="Rejected commit: Default" comment="添加了插入excel的功能" />
     <ignored path="SoqiSpider.iws" />
     <ignored path=".idea/workspace.xml" />
