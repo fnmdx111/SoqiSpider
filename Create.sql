@@ -12,3 +12,5 @@ ALTER TABLE `companyinformation`.`companyname` ADD COLUMN `companyname` VARCHAR(
 , DROP INDEX `idCompanyName_UNIQUE` 
 , ADD UNIQUE INDEX `idCompanyName_UNIQUE` (`ID` ASC) 
 , ADD UNIQUE INDEX `companyname_UNIQUE` (`companyname` ASC) , RENAME TO  `companyinformation`.`companyinformation` ;
+
+ALTER TABLE `companyinformation`.`companyinformation` CHANGE COLUMN `introduction` `introduction` VARCHAR(4096) NULL DEFAULT NULL  , CHANGE COLUMN `product` `product` VARCHAR(600) NULL DEFAULT NULL  ;

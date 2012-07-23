@@ -17,8 +17,7 @@ def finishinsert():
 #def initializer_func(logger):
     #初始化要写入的表格
     #insert.excel.initExcel(logger)
-    #初始化要写入的mysql数据库
-    #默认 host地址="localhost"，用户名='root'，密码='123456'，数据库名='companyinformation'，插入表名='companyinformation'
+
     #try:
     #    insert.mysql.initMysql(logger)
     #except :
@@ -26,6 +25,8 @@ def finishinsert():
 
 def init(logger):
     insert.excel.initExcel(logger)
+    #初始化要写入的mysql数据库
+    #默认 host地址="localhost"，用户名='root'，密码='123456'，数据库名='companyinformation'，插入表名='companyinformation'
     insert.mysql.initMysql(logger)
 
 
@@ -46,7 +47,7 @@ if __name__ == '__main__':
                 #row控制写入行数,写入excel
                 row+=1
                 insert.excel.insertToExcel(row=row,item=item)
-                insert.excel.finishExcel("companyinformation.xls")
+                insert.excel.finishExcel("companyinformation %s.xls" % date)
                 #写入mysql 异常处理是对于mysql插入失败的。
                 insert.mysql.inserttoMysql(item.get_info_as_tuple())
                 try:
