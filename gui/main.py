@@ -38,8 +38,8 @@ class Form(QDialog, object):
             except BaseException as e:
                 Form._ask_and_handle(
                     self,
-                    (u'出错了',
-                     u'发生了如下错误\n%s\n是否退出' % e),
+                    (u'出错了，数据库没有开启',
+                     u'mysql数据库连接发生了如下错误\n%s\n是否退出' % e),
                     (lambda: exit(), lambda: None)
                 )
 

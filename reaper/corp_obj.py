@@ -72,7 +72,7 @@ class CorpItem(object):
         extractor = lambda name: soup.find_all(
                 name='h3',
                 text=name.decode('utf-8')
-            )[0].next_sibling.next_sibling.get_text().encode('utf-8').lstrip('　').rstrip('　')
+            )[0].next_sibling.next_sibling.get_text().encode('utf-8').lstrip('  　').rstrip('  　')
         return extractor('公司简介'), extractor('产品及服务')
 
 
@@ -138,7 +138,20 @@ class CorpItem(object):
                         soup = BeautifulSoup(data, 'lxml')
                         title = soup.head.title.get_text()
                         # self._website_title = (title.decode(encoding) if encoding else title).encode('utf-8')
-                        self._website_title = title.encode('utf-8')
+
+                        try:
+                            charset=re.findall(r'(?<=charset=").*?(?=")',data,re.DOTALL)[0]
+                        except:
+                            try :
+                                charset=re.findall(r'(?<=charset=).*?(?=")',data,re.DOTALL)[0]
+                            except :
+                                charset='utf-8'
+                        if charset=='gbk' :
+                            self._website_title=title.decode('gbk').encode('utf-8')
+                        if charset=='gb2312' :
+                            self._website_title=title.decode('gb2312').encode('utf-8')
+                        if charset=='utf-8' or charset=='utf8':
+                            self._website_title = title.encode('utf-8')
                         if (not self._website_title) or ('全球最丰富的供应信息 尽在阿里巴巴' in self._website_title):
                             return
                     else:

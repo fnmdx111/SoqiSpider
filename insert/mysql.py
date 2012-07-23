@@ -5,7 +5,7 @@
 #reload(sys)
 #sys.setdefaultencoding('utf-8')
 import MySQLdb
-
+#from gui.main import
 conn=''
 cursor=''
 #host="localhost"
@@ -20,7 +20,7 @@ def initMysql(host="localhost",user='root',passwd='123456',db='companyinformatio
     conn=MySQLdb.connect(host,user,passwd,db,charset="utf8")
     cursor=conn.cursor()
 
-
+#,logger=gui.main.logger
 def inserttoMysql(tuple,tablename='companyinformation'):
     sql="insert into "+tablename+" values(%s,%s,%s,%s,%s,%s)"
     try:
@@ -28,9 +28,9 @@ def inserttoMysql(tuple,tablename='companyinformation'):
     except :
         deletesql="DELETE FROM `companyinformation`.`companyinformation` WHERE `ID`='"+tuple[0]+"'"
         cursor.execute(deletesql,())
-        print "去重操作：该数据存在重复,主键无法有相同值，已删除原有数据库中该条数据并重新生成:"
-        print "ID:"+tuple[0]
-        print "公司名:"+tuple[1]
+        logger.info("去重操作：该数据存在重复,主键无法有相同值，已删除原有数据库中该条数据并重新生成:")
+        logger.info("ID: %s" % tuple[0])
+        logger.info("公司名:%s"%tuple[1])
         n=cursor.execute(sql,tuple)
 
 
