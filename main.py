@@ -14,21 +14,21 @@ def finishinsert():
     #写入完毕，提交mysql
     insert.mysql.finishInsertMysql()
 
-def initializer_func():
+def initializer_func(logger):
 #初始化要写入的表格
-    insert.excel.initExcel()
+    insert.excel.initExcel(logger)
     #初始化要写入的mysql数据库
     #默认 host地址="localhost"，用户名='root'，密码='123456'，数据库名='companyinformation'，插入表名='companyinformation'
     try:
-        insert.mysql.initMysql()
+        insert.mysql.initMysql(logger)
     except :
         pass
         #TODO 提示mysql没有成功建立连接
         #PyQt4.QtGui.QMessageBox.Question(self,)
 
-def init():
-    insert.excel.initExcel()
-    insert.mysql.initMysql()
+def init(logger):
+    insert.excel.initExcel(logger)
+    insert.mysql.initMysql(logger)
 
 
 if __name__ == '__main__':

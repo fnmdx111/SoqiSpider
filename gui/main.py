@@ -29,12 +29,13 @@ class Form(QDialog, object):
         self.parameters = parameters
         self.transactor_func = transactor_func
         self.destroyer_func = destroyer_func
+        self.logger = logging.getLogger(__name__)
 
         super(Form, self).__init__(parent)
 
         if initializer_func:
             try:
-                initializer_func()
+                initializer_func(self.logger)
             except BaseException as e:
                 Form._ask_and_handle(
                     self,
@@ -68,7 +69,6 @@ class Form(QDialog, object):
         for widget in [self.le_end_id, self.le_to_page]:
             self.connect(widget, SIGNAL('editingFinished()'), self.editing_finished)
 
-        self.logger = logging.getLogger(__name__)
         handler = LoggerHandler(self.logger_widget)
         handler.setFormatter(logging.Formatter(
             fmt='<font color=blue>%(asctime)s</font> <font color=red><b>%(levelname) 8s</b></font> %(message)s',
