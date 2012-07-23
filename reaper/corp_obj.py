@@ -72,7 +72,7 @@ class CorpItem(object):
         extractor = lambda name: soup.find_all(
                 name='h3',
                 text=name.decode('utf-8')
-            )[0].next_sibling.next_sibling.get_text().encode('utf-8').lstrip('  　').rstrip('  　')
+            )[0].next_sibling.next_sibling.get_text().encode('utf-8').lstrip('	  　\n\r').rstrip('	   　\n\r')
         return extractor('公司简介'), extractor('产品及服务')
 
 
