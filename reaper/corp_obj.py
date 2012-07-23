@@ -9,6 +9,8 @@ from urllib3.connectionpool import HTTPConnectionPool
 import urllib2
 from urllib2 import URLError
 import re
+import chardet
+
 #设定错误超时，以免发生一直卡住的现象
 urllib2.socket.setdefaulttimeout(30)
 class CorpItem(object):
@@ -138,14 +140,8 @@ class CorpItem(object):
                         soup = BeautifulSoup(data, 'lxml')
                         title = soup.head.title.get_text()
                         # self._website_title = (title.decode(encoding) if encoding else title).encode('utf-8')
-
-                        try:
-                            charset=re.findall(r'(?<=charset=").*?(?=")',data,re.DOTALL)[0]
-                        except:
-                            try :
-                                charset=re.findall(r'(?<=charset=).*?(?=")',data,re.DOTALL)[0]
-                            except :
-                                charset='utf-8'
+                        charset=chardet.detect(data)['encoding'].lower()
+                        #解决字符编码乱码问题
                         if charset=='gbk' :
                             self._website_title=title.decode('gbk').encode('utf-8')
                         if charset=='gb2312' :
