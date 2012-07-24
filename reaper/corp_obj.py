@@ -29,7 +29,6 @@ class CorpItem(object):
         # self.raw = raw_content
         self.logger = logger
         self.extracted = False
-
         self.extract_info(raw_content)
 
 
@@ -40,7 +39,6 @@ class CorpItem(object):
         obj: 一个CorpItem对象，如果不是None，则它的id_page会被设为其在soqi.cn里的页面
         返回: 企业id和名称"""
         a = li.find_all(name='div', attrs={'class': 'resultName'})[0].h3.a
-
         if obj:
             obj.id_page = a.get('href')
 

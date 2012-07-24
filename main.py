@@ -8,9 +8,13 @@ from gui.main import *
 import insert.excel
 import insert.mysql
 
+date=time.strftime("%Y-%m-%d %H %M %S",time.localtime(time.time()))
+date=str(date)
+
 def finishinsert():
+    global date
     #写入完毕，保存excel ,输出文件名可以自定义
-    insert.excel.finishExcel("companyinformation.xls")
+    insert.excel.finishExcel("companyinformation %s.xls" % date)
     #写入完毕，提交mysql
     insert.mysql.finishInsertMysql()
 
@@ -32,8 +36,6 @@ def init(logger):
 
 if __name__ == '__main__':
     row=0
-    date=time.strftime("%Y-%m-%d %H %M %S",time.localtime(time.time()))
-    date=str(date)
 
     with open(date + '.txt', 'w') as ff:
         the_lock = threading.RLock()
@@ -47,12 +49,12 @@ if __name__ == '__main__':
                 #row控制写入行数,写入excel
                 row+=1
                 insert.excel.insertToExcel(row=row,item=item)
-                insert.excel.finishExcel("companyinformation %s.xls" % date)
+                #insert.excel.finishExcel("companyinformation %s.xls" % date)
                 #写入mysql 异常处理是对于mysql插入失败的。
                 insert.mysql.inserttoMysql(item.get_info_as_tuple())
                 try:
                     insert.mysql.conn.commit()
-                except :
+                except BaseException:
                     pass
                 #写入txt
                 ff.write(item.corp_name+"\n       ID:"+item.id+"\n       公司简介:"+item.introduction+"\n       主要产品关键词:"+item.product+"\n       网址:"+item.website+"\n       网址标题:"+item.website_title+'\n')
