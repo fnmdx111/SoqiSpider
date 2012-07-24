@@ -74,6 +74,6 @@ def get_ids(start, end):
 
 
 if __name__ == '__main__':
-    print sorted(list(get_ids('653125', '653126')))
+    print sorted(list(get_ids('000000', '820000')))
 
 
