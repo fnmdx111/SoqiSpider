@@ -19,6 +19,9 @@ def get_adjacent_city_id(city_id, which_one=succ):
 
 
 def get_ids(start, end):
+    if start == end:
+        return (start,)
+
     def get_counties(city_id):
         if city_id in municipalities:
             collection = municipality_areas
@@ -74,6 +77,6 @@ def get_ids(start, end):
 
 
 if __name__ == '__main__':
-    print sorted(list(get_ids('653125', '653126')))
+    print sorted(list(get_ids('420600', '420600')))
 
 

@@ -25,10 +25,17 @@ class Form(QDialog, object):
     _CheckBox_keyword_names = map(lambda item: 'cb_' + item, ['company', 'factory', 'corp', 'center', 'inst'])
     _LineEdit_names = map(lambda item: 'le_' + item, ['start_id', 'end_id', 'from_page', 'to_page', 'thread_amount'])
 
-    def __init__(self, transactor_func, initializer_func=None, destroyer_func=None, parameters=None, parent=None, config=None):
+    def __init__(self, transactor_func,
+                 initializer_func=None,
+                 destroyer_func=None,
+                 parameters=None,
+                 parent=None,
+                 config=None,
+                 max_retry=30):
         self.parameters = parameters
         self.transactor_func = transactor_func
         self.destroyer_func = destroyer_func
+        self.max_retry=max_retry,
         self.logger = logging.getLogger(__name__)
 
         super(Form, self).__init__(parent)
@@ -217,9 +224,10 @@ class Form(QDialog, object):
 
 
     def grabbing_finished(self, job_identity):
-        self.logger_widget.append('<b><font color="green">job %s done</font></b>' % job_identity)
+        # self.logger.info('<b><font color="green">作业 %s 结束</font></b>' % job_identity)
         # self.btn_start.emit(SIGNAL('clicked()'))
-        self.btn_start_click()
+        if not gui.misc.STOP_CLICKED:
+            self.btn_start_click()
 
 
     def new_log(self, s):
@@ -260,7 +268,7 @@ class Form(QDialog, object):
 
                     self.logger.info(
                         '开始: 关键字 %s, 城市号 %s, (%d, %d)',
-                        keyword, param.city_id,
+                        keyword, param.city_id.encode('utf-8'),
                         param.from_page, param.to_page
                     )
 
@@ -269,7 +277,7 @@ class Form(QDialog, object):
                         (param.from_page, param.to_page),
                         city_code=param.city_id,
                         content_man=cont_man,
-                        max_retry=15,
+                        max_retry=self.max_retry,
                         thread_num=THREAD_AMOUNT_SAFE,
                         logger=self.logger
                     )
@@ -299,7 +307,7 @@ class Form(QDialog, object):
         def _prepare_parameters(start_id, end_id, from_page, to_page):
             params = []
             for city_id in get_ids(start_id, end_id):
-                    params.append(ParameterSet((from_page, to_page), city_id))
+                    params.append(ParameterSet((from_page, to_page), city_id.encode('utf-8')))
 
             return params
 
@@ -326,8 +334,7 @@ class Form(QDialog, object):
             self.thread_amount
         )
 
-        return _prepare_parameters(
-            start_id, end_id, int(from_page), int(to_page))
+        return _prepare_parameters(start_id, end_id, int(from_page), int(to_page))
 
 
     def has_valid_inputs(self):

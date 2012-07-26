@@ -1,26 +1,35 @@
-#encoding:utf-8
-from pyExcelerator import *
+# encoding: utf-8
+from pyExcelerator import Workbook
 
-logger = None
 
-w=Workbook()
-ws = w.add_sheet('CompanyInformation')
+class ExcelWriter(object):
 
-def initExcel(_logger, worksheet=ws):
-    global w,ws, logger
+    XLS_HEADERS = [u'公司ID编码', u'公司名', u'公司简介', u'公司主要产品', u'公司网站', u'公司网站标题']
+    COLS = len(XLS_HEADERS)
 
-    logger = _logger
+    def __init__(self, logger, output_name='text.xls'):
+        self.logger = logger
+        self.workbook = Workbook()
+        self.worksheet = self.workbook.add_sheet('CompanyInformation')
+        self.output_name = output_name
+        self.row = 1
 
-    xls_headers=[u"公司ID编码",u"公司名",u"公司简介",u"公司主要产品",u"公司网站",u"公司网站标题"]
-    for i in range(0,6):
-        worksheet.write(0,i,xls_headers[i])
+        for col in range(ExcelWriter.COLS):
+            self.worksheet.write(0, col, ExcelWriter.XLS_HEADERS[col])
 
-def insertToExcel(worksheet=ws,row=1,item=0):
-    global w,ws
-    items=item.get_info_as_tuple()
-    for i in range(0,6):
-        worksheet.write(row,i,str(items[i]).decode('utf-8'))
 
-def finishExcel(outputname='test.xls'):
-    global w
-    w.save(outputname)
+    def insert(self, obj):
+        items = obj.get_info_as_tuple()
+        for col, item in enumerate(items):
+            self.worksheet.write(self.row, col, item.decode('utf-8'))
+
+
+    def next_row(self):
+        self.row += 1
+        return self.row
+
+
+    def commit(self):
+        self.workbook.save(self.output_name)
+
+

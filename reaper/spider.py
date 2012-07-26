@@ -43,19 +43,19 @@ def _grab(keyword, page_number, pool, city_code='100000', logger=None, predicate
 
     candidates = map(
         lambda raw: CorpItem(raw, page_number, city_code, logger=logger), # 将soup里的class为resultSummary的div转化为CorpItem对象
-        filter(
-            lambda x: x.has_attr('id'),
-            soup.find_all(
-                name='div',
-                attrs={
-                    'class': 'resultSummary'
-                })))
+        soup.find_all(
+            name='div',
+            attrs={
+                'class': 'itemblocks'
+            }))
+
+    tag_next_page = soup.find(name='span', attrs={'class': 'disabled'})
+    if tag_next_page and (u'下' in tag_next_page.get_text()):
+        logger.debug('last page found: %s', page_number)
+        misc.last_page_found = page_number
 
     if len(candidates):
         logger.info('soqi.cn在第%s页返回有效信息，继续', page_number)
-        if not soup.find_all(text='下一页'):
-            logger.debug('last page found: %s', page_number)
-            misc.last_page_found = page_number
     else:
         logger.info('soqi.cn在第%s页返回空网页，重试', page_number)
 
