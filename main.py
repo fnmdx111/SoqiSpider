@@ -2,70 +2,48 @@
 import threading
 from PyQt4.QtGui import *
 import sys
-import time
 from gui.misc import ConfigReader
 from gui.main import *
-import insert.excel
-import insert.mysql
-
-date=time.strftime("%Y-%m-%d %H %M %S",time.localtime(time.time()))
-date=str(date)
-
-def finishinsert():
-    global date
-    #写入完毕，保存excel ,输出文件名可以自定义
-    insert.excel.finishExcel("companyinformation %s.xls" % date)
-    #写入完毕，提交mysql
-    insert.mysql.finishInsertMysql()
-
-#def initializer_func(logger):
-    #初始化要写入的表格
-    #insert.excel.initExcel(logger)
-
-    #try:
-    #    insert.mysql.initMysql(logger)
-    #except :
-    #    pass
-
-def init(logger):
-    insert.excel.initExcel(logger)
-    #初始化要写入的mysql数据库
-    #默认 host地址="localhost"，用户名='root'，密码='123456'，数据库名='companyinformation'，插入表名='companyinformation'
-    insert.mysql.initMysql(logger)
+from insert.excel import ExcelWriter
+from insert.mysql import MySQLWriter
 
 
 if __name__ == '__main__':
-    row=0
+    excel_writer = ExcelWriter(None)
+    # mysql_writer = MySQLWriter(None)
 
-    with open(date + '.txt', 'w') as ff:
-        the_lock = threading.RLock()
-        def transact(item):
-            if not item.is_valid_item():
-                return
-            with the_lock:
-                #print >> ff, item.corp_name, ',', item.website_title, ',', item.introduction
-                #ff.flush()
-                global row
-                #row控制写入行数,写入excel
-                row+=1
-                insert.excel.insertToExcel(row=row,item=item)
-                #insert.excel.finishExcel("companyinformation %s.xls" % date)
-                #写入mysql 异常处理是对于mysql插入失败的。
-                insert.mysql.inserttoMysql(item.get_info_as_tuple())
-                try:
-                    insert.mysql.conn.commit()
-                except BaseException:
-                    pass
-                #写入txt
-                ff.write(item.corp_name+"\n       ID:"+item.id+"\n       公司简介:"+item.introduction+"\n       主要产品关键词:"+item.product+"\n       网址:"+item.website+"\n       网址标题:"+item.website_title+'\n')
-                ff.flush()
+    def init(logger):
+        excel_writer.logger = logger
+        # mysql_writer.logger = logger
 
 
+    def destroy():
+        excel_writer.commit()
+        # mysql_writer.commit()
+        # mysql_writer.finish()
 
-        app = QApplication(sys.argv)
-        form = Form(transact, config=ConfigReader('Spider.exe.config'), destroyer_func=finishinsert, initializer_func=init)
-        form.show()
-        app.exec_()
-        # form = Form(destroyer_func=finishinsert)
+
+    the_lock = threading.RLock()
+    def transact(item):
+        if not item.is_valid_item():
+            return
+
+        with the_lock:
+            excel_writer.insert(item)
+            excel_writer.commit()
+            excel_writer.next_row()
+
+            # mysql_writer.insert(item)
+            # try:
+            #     mysql_writer.commit()
+            #     pass
+            # except BaseException:
+            #     pass
+
+
+    app = QApplication(sys.argv)
+    form = Form(transact, config=ConfigReader('Spider.exe.config'), destroyer_func=destroy, initializer_func=init)
+    form.show()
+    app.exec_()
 
 

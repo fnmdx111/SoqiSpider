@@ -21,7 +21,7 @@ class LoggerHandler(Handler):
     def emit(self, record):
         if STOP_CLICKED:
             if not self.locked:
-                self.logger_widget.emit(SIGNAL('newLog(QString'), u'请耐心等待线程停止...')
+                self.logger_widget.emit(SIGNAL('newLog(QString)'), u'请耐心等待线程停止...')
                 self.locked = True
         else:
             self.locked = False

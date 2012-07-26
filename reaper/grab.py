@@ -1,19 +1,13 @@
 # encoding: utf-8
 
-import functools
 from threading import Thread
 import threading
-import time
 import gui
 from reaper import misc
-import reaper
 from reaper.misc import partition, to_ellipsis
 from reaper.constants import HEADERS
-from reaper.content_man import ContentManager
 from reaper.spider import grab
 from urllib3.connectionpool import HTTPConnectionPool
-import insert.mysql
-import insert.excel
 the_lock = threading.RLock()
 
 
@@ -135,43 +129,5 @@ def start_multi_threading(
 
     return container
 
-if __name__ == '__main__':
-    row=0
-    def transact(item, file_obj):
-        global row
-        if not item.is_valid_item():
-            return
-        with the_lock:
-            #print >> file_obj, item.corp_name, ',', item.id, ',', item.introduction, ',', item.website, ',', item.website_title
 
-            #row控制写入行数,写入excel
-            row+=1
-            insert.excel.insertToExcel(row=row,item=item)
-
-            #写入mysql
-            insert.mysql.inserttoMysql(item.get_info_as_tuple())
-
-            #写入txt
-            file_obj.write(item.corp_name+"\n       ID:"+item.id+"\n       公司简介:"+item.introduction+"\n       主要产品关键词:"+item.product+"\n       网址:"+item.website+"\n       网址标题:"+item.website_title+'\n')
-            file_obj.flush()
-
-    #初始化要写入的表格
-    insert.excel.initExcel()
-
-    #初始化要写入的mysql数据库
-    #默认 host地址="localhost"，用户名='root'，密码='123456'，数据库名='companyinformation'，插入表名='companyinformation'
-    insert.mysql.initMysql()
-
-
-    with open(str(int(time.time() * 100)) + '.txt', 'w') as ff:
-        cont_man = ContentManager(functools.partial(transact, file_obj=ff))
-        start_multi_threading('公司', (1, 5),thread_num=1,content_man=cont_man, max_retry=15, logger=reaper.logger)
-        # cont_man.join_all()
-
-        #写入完毕，保存excel ,输出文件名可以自定义
-        outputname="OutputCompanyInfor.xls"
-        insert.excel.finishExcel(outputname)
-
-        #写入完毕，提交mysql
-        insert.mysql.finishInsertMysql()
 
