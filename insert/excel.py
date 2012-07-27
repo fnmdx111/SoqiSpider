@@ -22,6 +22,7 @@ class ExcelWriter(object):
         items = obj.get_info_as_tuple()
         for col, item in enumerate(items):
             self.worksheet.write(self.row, col, item.decode('utf-8'))
+        self.logger.info('成功在%s中写入%s', self.output_name, obj.corp_name)
 
 
     def next_row(self):

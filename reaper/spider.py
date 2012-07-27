@@ -27,11 +27,13 @@ def _grab(keyword, page_number, pool, city_code='100000', logger=None, predicate
 
     logger.info('retrieving %s of page %s' % (keyword, page_number))
 
+    # url example: `http://www.soqi.cn/search?keywords=%E5%85%AC%E5%8F%B8&city=420600&sort=1&search_type=3&page=3'
     values = {
         'city': city_code,
         'keywords': keyword,
-        'search_type': 0,
-        'page': page_number
+        'search_type': 3,
+        'page': page_number,
+        'sort': 1
     }
     encoded_values = urllib.urlencode(values)
 

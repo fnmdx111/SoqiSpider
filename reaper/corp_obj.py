@@ -1,6 +1,5 @@
 # encoding: utf-8
 import logging
-
 import threading
 from bs4 import BeautifulSoup
 import gui
@@ -141,7 +140,7 @@ class CorpItem(object):
                 except URLError as _:
                     self.logger.warning('域名%s也许是过期了', self.website.__repr__())
                 except AttributeError as _:
-                    self.logger.info('%s没有标题', self.website)
+                    self.logger.warning('%s没有标题', self.website)
                 except ValueError as e:
                     if 'unknown url type' in e.message:
                         self.logger.error('未知的URL类型: %s', self.website if self.website else 'n/a')

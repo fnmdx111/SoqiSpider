@@ -37,6 +37,7 @@ class Form(QDialog, object):
         self.destroyer_func = destroyer_func
         self.max_retry=max_retry,
         self.logger = logging.getLogger(__name__)
+        self.cont_man = ContentManager(self.transactor_func)
 
         super(Form, self).__init__(parent)
 
@@ -224,9 +225,8 @@ class Form(QDialog, object):
 
 
     def grabbing_finished(self, job_identity):
-        # self.logger.info('<b><font color="green">作业 %s 结束</font></b>' % job_identity)
-        # self.btn_start.emit(SIGNAL('clicked()'))
-        if not gui.misc.STOP_CLICKED:
+        self.logger.info('<b><font color="green">作业 %s 结束</font></b>', unicode(job_identity).encode('utf-8'))
+        if not gui.misc.STOP_CLICKED and self.cont_man:
             self.btn_start_click()
 
 
@@ -282,8 +282,8 @@ class Form(QDialog, object):
                         logger=self.logger
                     )
 
-            # cont_man.join_all()
-
+            while not cont_man.job_done():
+                pass
             self.emit(SIGNAL('jobFinished(QString)'), QString('%s to %s' % (params[0].city_id, params[-1].city_id)))
 
         def dummy():
