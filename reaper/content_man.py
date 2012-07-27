@@ -37,6 +37,10 @@ class ContentManager(object):
             self.thread.start()
 
 
+    def job_done(self):
+        return not len(self.objects)
+
+
     #def join_all(self):
     #     self.thread.join()
 
