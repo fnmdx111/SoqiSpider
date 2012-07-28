@@ -25,7 +25,7 @@ def _grab(keyword, page_number, pool, city_code='100000', logger=None, predicate
         else:
             predicate = lambda item: _p1(item)
 
-    logger.info('retrieving %s of page %s' % (keyword, page_number))
+    logger.info('正在获取以%s为关键字的搜索结果的第%s页' % (keyword, page_number))
 
     # url example: `http://www.soqi.cn/search?keywords=%E5%85%AC%E5%8F%B8&city=420600&sort=1&search_type=3&page=3'
     values = {
