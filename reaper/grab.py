@@ -12,16 +12,17 @@ the_lock = threading.RLock()
 
 
 
-def _start_multi_threading(per_thread_func, per_thread_args, flags):
+def _start_multi_threading(per_thread_func, per_thread_args, flags, thread_watcher):
     """启动线程的函数
     per_thread_func: 对于每个线程来说的主函数
     per_thread_args: 应用到主函数上的参数列表"""
     threads = []
 
     def _(item, args):
-        flags[item] = False
-        per_thread_func(*args)
-        flags[item] = True
+        with thread_watcher.register(u'子抓取线程 #%s' % item):
+            flags[item] = False
+            per_thread_func(*args)
+            flags[item] = True
 
     for item, args in enumerate(per_thread_args):
         if gui.misc.STOP_CLICKED:
@@ -39,6 +40,7 @@ def start_multi_threading(
         keyword,
         (from_page, to_page),
         content_man,
+        thread_watcher,
         logger=None,
         city_code='100000',
         container=None,
@@ -93,7 +95,8 @@ def start_multi_threading(
                 pages=pages,
                 city_code=city_code,
                 logger=logger,
-                predicate=predicate
+                predicate=predicate,
+                thread_watcher=thread_watcher
             ) # 注意grabber是一个生成器
             for page, is_empty_page, grabbed_items in grabber:
                 if gui.misc.STOP_CLICKED:
@@ -114,11 +117,15 @@ def start_multi_threading(
         logger.debug('allocated scheme %s', per_thread_args)
 
         flags = [False for _ in range(len(per_thread_args))]
-        _start_multi_threading(per_thread, per_thread_args, flags)
+        _start_multi_threading(per_thread, per_thread_args, flags, thread_watcher)
 
         # 对本轮抓取到的页面号进行差分，得到还未抓取的页面号，存储在set_diff中
         set_diff -= set(grabbed_page_list)
         retry += 1
+
+        logger.info('<b><font color="red">等待本轮写入结束，还剩%s个对象</font></b>', len(content_man.objects))
+        while not content_man.is_job_done():
+            pass
 
         if misc.last_page_found:
             # 如果找到了最后一页的页码，则将剩余页码中大于等于它的去掉

@@ -8,6 +8,7 @@ import sys
 import time
 import gui
 from gui.misc import LoggerHandler, ParameterSet, THREAD_AMOUNT_SAFE, ITEM_DENSITY, SUBTHREAD_AMOUNT, ConfigReader
+from gui.thread_watcher import ThreadWatcher
 from reaper.misc import take, get_estimate_item_amount
 from reaper.constants import REQUIRED_SUFFIXES, AUTO, HEADERS
 from reaper.content_man import ContentManager
@@ -35,9 +36,8 @@ class Form(QDialog, object):
         self.parameters = parameters
         self.transactor_func = transactor_func
         self.destroyer_func = destroyer_func
-        self.max_retry = max_retry,
+        self.max_retry = max_retry
         self.logger = logging.getLogger(__name__)
-        self.cont_man = ContentManager(self.transactor_func)
 
         super(Form, self).__init__(parent)
 
@@ -118,6 +118,8 @@ class Form(QDialog, object):
         self.le_end_id.companion = self.le_start_id
         self.le_to_page.companion = self.le_from_page
 
+        self.thread_watcher = ThreadWatcher(self)
+
         self._start_thread_counter()
 
 
@@ -139,11 +141,12 @@ class Form(QDialog, object):
 
     def _start_thread_counter(self):
         def active_thread_counter():
-            current_count = threading.active_count()
-            while True:
-                if current_count != threading.active_count():
-                    current_count = threading.active_count()
-                    self.emit(SIGNAL('activeThreadCountChanged(int)'), current_count)
+            with self.thread_watcher.register(u'线程计数器'):
+                current_count = threading.active_count()
+                while True:
+                    if current_count != threading.active_count():
+                        current_count = threading.active_count()
+                        self.emit(SIGNAL('activeThreadCountChanged(int)'), current_count)
 
         th = threading.Thread(target=active_thread_counter)
         th.setDaemon(True)
@@ -235,13 +238,9 @@ class Form(QDialog, object):
 
 
     def get_checked_keywords(self):
-        return filter(
-            lambda item: item.checkState() == Qt.Checked,
-            map(
-                lambda item: self.__getattribute__(item),
-                Form._CheckBox_keyword_names
-            )
-        )
+        return filter(lambda item: item.checkState() == Qt.Checked,
+                      map(lambda item: self.__getattribute__(item),
+                          Form._CheckBox_keyword_names))
 
 
     def start_threads(self, parameters):
@@ -251,52 +250,56 @@ class Form(QDialog, object):
         conn_pool = HTTPConnectionPool(host='www.soqi.cn', headers=HEADERS)
 
         def _(params):
-            cont_man = ContentManager(self.transactor_func)
-            for param in params:
-                for keyword in map(lambda item: unicode(item.text()).encode('utf-8'), self.get_checked_keywords()):
+            with self.thread_watcher.register(u'分抓取线程'):
+                cont_man = ContentManager(self.transactor_func, self.logger, self.thread_watcher)
+                for param in params:
+                    for keyword in map(lambda item: unicode(item.text()).encode('utf-8'),
+                                       self.get_checked_keywords()):
+                        if gui.misc.STOP_CLICKED:
+                            return
+
+                        if param.to_page == AUTO:
+                            self.logger.info('自动检测结束页... 正在获取粗略项目数量')
+                            item_amount = get_estimate_item_amount(keyword, param.city_id, conn_pool, self.logger)
+                            if item_amount > 0:
+                                param.to_page = int(item_amount / ITEM_DENSITY) + 1
+                            else:
+                                param.to_page = 2000
+                            self.logger.info('总项目数量: %s, 估计结束页: %s', item_amount, param.to_page)
+
+                        self.logger.info(
+                            '开始: 关键字 %s, 城市号 %s, (%d, %d)',
+                            keyword, param.city_id.encode('utf-8'),
+                            param.from_page, param.to_page
+                        )
+
+                        start_multi_threading( # 这个函数开启thread_num个线程
+                            keyword,
+                            (param.from_page, param.to_page),
+                            city_code=param.city_id,
+                            content_man=cont_man,
+                            max_retry=self.max_retry,
+                            thread_num=self.thread_amount,
+                            logger=self.logger,
+                            thread_watcher=self.thread_watcher
+                        )
+
+                while not cont_man.is_job_done():
+                    pass
+                self.emit(SIGNAL('jobFinished(QString)'), QString('%s to %s' % (params[0].city_id, params[-1].city_id)))
+
+        def dummy():
+            with self.thread_watcher.register(u'主抓取线程'):
+                for sub_params in take(parameters, by=int(self.thread_amount / SUBTHREAD_AMOUNT)): # e.g. by=300 / 20 = 15 即一次并发抓取15个city_id
                     if gui.misc.STOP_CLICKED:
                         return
 
-                    if param.to_page == AUTO:
-                        self.logger.info('自动检测结束页... 正在获取粗略项目数量')
-                        item_amount = get_estimate_item_amount(keyword, param.city_id, conn_pool, self.logger)
-                        if item_amount > 0:
-                            param.to_page = int(item_amount / ITEM_DENSITY) + 1
-                        else:
-                            param.to_page = 2000
-                        self.logger.info('总项目数量: %s, 估计结束页: %s', item_amount, param.to_page)
-
-                    self.logger.info(
-                        '开始: 关键字 %s, 城市号 %s, (%d, %d)',
-                        keyword, param.city_id.encode('utf-8'),
-                        param.from_page, param.to_page
-                    )
-
-                    start_multi_threading( # 这个函数开启thread_num个线程
-                        keyword,
-                        (param.from_page, param.to_page),
-                        city_code=param.city_id,
-                        content_man=cont_man,
-                        max_retry=self.max_retry,
-                        thread_num=THREAD_AMOUNT_SAFE,
-                        logger=self.logger
-                    )
-
-            while not cont_man.job_done():
-                pass
-            self.emit(SIGNAL('jobFinished(QString)'), QString('%s to %s' % (params[0].city_id, params[-1].city_id)))
-
-        def dummy():
-            for sub_params in take(parameters, by=int(self.thread_amount / SUBTHREAD_AMOUNT)): # e.g. by=300 / 20 = 15 即一次并发抓取15个city_id
-                if gui.misc.STOP_CLICKED:
-                    return
-
-                _(sub_params)
-                # self.logger.info('当前并发抓取的id为: %s', map(lambda item: item.city_id + ' ' + item.keyword, sub_params))
-                # transactor_thread = threading.Thread(target=_, args=(sub_params,)) # 这个线程开启THREAD_AMOUNT_SAFE个线程
-                # transactor_thread.setDaemon(True)
-                # transactor_thread.start()
-                # transactor_thread.join() # 阻塞，防止一次启动多个抓取主线程，吃不消
+                    _(sub_params)
+                    # self.logger.info('当前并发抓取的id为: %s', map(lambda item: item.city_id + ' ' + item.keyword, sub_params))
+                    # transactor_thread = threading.Thread(target=_, args=(sub_params,)) # 这个线程开启THREAD_AMOUNT_SAFE个线程
+                    # transactor_thread.setDaemon(True)
+                    # transactor_thread.start()
+                    # transactor_thread.join() # 阻塞，防止一次启动多个抓取主线程，吃不消
 
         t = threading.Thread(target=dummy)
         t.setDaemon(True)
@@ -324,8 +327,9 @@ class Form(QDialog, object):
         if not to_page:
             to_page = AUTO
         if not self.thread_amount:
-            self.thread_amount = AUTO
-            self.thread_amount = min(self.thread_amount, THREAD_AMOUNT_SAFE)
+            self.thread_amount = THREAD_AMOUNT_SAFE
+        else:
+            self.thread_amount = int(self.thread_amount)
 
         self.logger.debug(
             'start_id: %s, end_id: %s, from_page: %s, to_page: %s, thread_amount: %s',

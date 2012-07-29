@@ -4,7 +4,7 @@ from PyQt4.QtCore import *
 from bs4 import BeautifulSoup
 
 
-THREAD_AMOUNT_SAFE = 500
+THREAD_AMOUNT_SAFE = 300
 SUBTHREAD_AMOUNT = 20
 
 STOP_CLICKED = True
