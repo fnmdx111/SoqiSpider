@@ -1,7 +1,5 @@
-*.py[cod]
-workspace.xml
-.idea
+*.pyc
 *.txt
-*.exe
 *.zip
 *.xls
+*.exe
