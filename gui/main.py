@@ -35,7 +35,7 @@ class Form(QDialog, object):
         self.parameters = parameters
         self.transactor_func = transactor_func
         self.destroyer_func = destroyer_func
-        self.max_retry=max_retry,
+        self.max_retry=max_retry
         self.logger = logging.getLogger(__name__)
         self.cont_man = ContentManager(self.transactor_func)
 
