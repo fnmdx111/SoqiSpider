@@ -229,7 +229,7 @@ class Form(QDialog, object):
 
     def grabbing_finished(self, job_identity):
         self.logger.info('<b><font color="green">作业 %s 结束</font></b>', unicode(job_identity).encode('utf-8'))
-        if not gui.misc.STOP_CLICKED and self.cont_man:
+        if not gui.misc.STOP_CLICKED:
             self.btn_start_click()
 
 
