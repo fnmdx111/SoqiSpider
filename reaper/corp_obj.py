@@ -1,4 +1,4 @@
-# encoding: utf-8
+#encoding=utf-8
 import logging
 import threading
 from bs4 import BeautifulSoup
@@ -10,6 +10,7 @@ from urllib3.connectionpool import HTTPConnectionPool
 import urllib2
 from urllib2 import URLError
 import re
+import chardet
 #设定错误超时，以免发生一直卡住的现象
 urllib2.socket.setdefaulttimeout(30)
 class CorpItem(object):
@@ -128,11 +129,17 @@ class CorpItem(object):
                         request = urllib2.Request(self.website, headers=COMMON_HEADERS)
                         response = urllib2.urlopen(request)
                         self.logger.info('正在连接 %s' % self.website)
+
+
                         if response:
-                            soup = BeautifulSoup(response.read(), 'lxml')
+                            htmlfile=response.read()
+                            charset=chardet.detect(htmlfile)['encoding'].lower()
+                            soup = BeautifulSoup(htmlfile, 'lxml',from_encoding=charset)
                             title = soup.head.title.get_text()
                             self._website_title = title.encode('utf-8')
-                            if (not self._website_title) or ('全球最丰富的供应信息 尽在阿里巴巴' in self._website_title):
+
+                            if (not self._website_title) or ('阿里巴巴' in self._website_title) or ('全球最丰富的供应信息 尽在阿里巴巴' in self._website_title) :
+                                self._website_title=""
                                 return
                         else:
                             return
