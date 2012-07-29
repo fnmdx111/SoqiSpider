@@ -7,7 +7,7 @@ from reaper.constants import REQUIRED_SUFFIXES
 from reaper.corp_obj import CorpItem
 from reaper import misc
 
-def _grab(keyword, page_number, pool, city_code='100000', logger=None, predicate=None):
+def _grab(keyword, page_number, pool, thread_watcher, city_code='100000', logger=None, predicate=None):
     """按照给定的参数进行抓取，必要时执行初步过滤
     keyword: 给定的关键字
     page_number: 页数
@@ -25,7 +25,7 @@ def _grab(keyword, page_number, pool, city_code='100000', logger=None, predicate
         else:
             predicate = lambda item: _p1(item)
 
-    logger.info('retrieving %s of page %s' % (keyword, page_number))
+    logger.info('正在获取以%s为关键字的搜索结果的第%s页' % (keyword, page_number))
 
     # url example: `http://www.soqi.cn/search?keywords=%E5%85%AC%E5%8F%B8&city=420600&sort=1&search_type=3&page=3'
     values = {
@@ -44,7 +44,7 @@ def _grab(keyword, page_number, pool, city_code='100000', logger=None, predicate
     soup = BeautifulSoup(response.data, 'lxml')
 
     candidates = map(
-        lambda raw: CorpItem(raw, page_number, city_code, logger=logger), # 将soup里的class为resultSummary的div转化为CorpItem对象
+        lambda raw: CorpItem(raw, page_number, city_code, logger=logger, thread_watcher=thread_watcher), # 将soup里的class为resultSummary的div转化为CorpItem对象
         soup.find_all(
             name='div',
             attrs={
@@ -65,7 +65,7 @@ def _grab(keyword, page_number, pool, city_code='100000', logger=None, predicate
             filter(predicate, candidates))
 
 
-def grab(keyword, pool, pages, city_code='100000', logger=None, predicate=None):
+def grab(keyword, pool, pages, thread_watcher, city_code='100000', logger=None, predicate=None):
     """对给定的页面列表（离散的）进行批量抓取（即调用_grab）
     抛出: 页面号，是否是空页面的变量，所抓取的CorpItem对象列表
     # 参数与_grab相同，略"""
@@ -73,7 +73,12 @@ def grab(keyword, pool, pages, city_code='100000', logger=None, predicate=None):
         if gui.misc.STOP_CLICKED:
             break
 
-        is_empty_page, grabbed = _grab(keyword, page, pool, city_code=city_code, logger=logger, predicate=predicate)
+        is_empty_page, grabbed = _grab(keyword,
+                                       page, pool,
+                                       city_code=city_code,
+                                       logger=logger,
+                                       predicate=predicate,
+                                       thread_watcher=thread_watcher)
         if (not is_empty_page) and (not len(grabbed)):
             logger.info('%s非空，但是没有符合条件的结果', page)
 

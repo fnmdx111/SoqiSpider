@@ -9,7 +9,7 @@ from insert.mysql import MySQLWriter
 
 
 if __name__ == '__main__':
-    excel_writer = ExcelWriter(None)
+    excel_writer = ExcelWriter(None, output_name=str(int(time.time())) + '.xls')
     # mysql_writer = MySQLWriter(None)
 
     def init(logger):
@@ -43,7 +43,10 @@ if __name__ == '__main__':
 
     app = QApplication(sys.argv)
     form = Form(transact, config=ConfigReader('Spider.exe.config'), destroyer_func=destroy, initializer_func=init)
+
     form.show()
+    form.thread_watcher.show()
+
     app.exec_()
 
 

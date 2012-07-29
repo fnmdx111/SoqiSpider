@@ -1,26 +1,35 @@
 # encoding: utf-8
+import logging
 import threading
 import time
 import gui
+from gui.thread_watcher import ThreadWatcher
 
 class ContentManager(object):
-    def __init__(self, func):
+    def __init__(self, func, logger, thread_watcher):
         self.func = func
+        self.thread_watcher = thread_watcher
         self.thread = None
         self.objects = []
         self.threads = []
+        self.logger = logger
 
 
     def _gen_thread_func(self):
         def func():
-            while self.objects:
-                if gui.misc.STOP_CLICKED:
-                    return
-                self.func(self.objects.pop(0))
+            with self.thread_watcher.register(u'内容管理器'):
+                while self.objects:
+                    if gui.misc.STOP_CLICKED:
+                        return
+                    # th = threading.Thread(target=self.func, args=(self.objects.pop(0),))
+                    # th.start()
+                    # th.join()
+                    self.func(self.objects.pop(0))
+                    self.logger.info('处理了一个对象，剩余: %s', len(self.objects))
 
-                # thread = threading.Thread(target=self.func, args=(self.objects.pop(0),))
-                # thread.start()
-                # self.threads.append(thread)
+                    # thread = threading.Thread(target=self.func, args=(self.objects.pop(0),))
+                    # thread.start()
+                    # self.threads.append(thread)
 
         return func
 
@@ -37,7 +46,7 @@ class ContentManager(object):
             self.thread.start()
 
 
-    def job_done(self):
+    def is_job_done(self):
         return not len(self.objects)
 
 
@@ -59,7 +68,7 @@ if __name__ == '__main__':
         time.sleep(3)
         print '%s out thread' % item
 
-    content_man = ContentManager(func_mimic)
+    content_man = ContentManager(func_mimic, logging.getLogger(__name__), ThreadWatcher(None))
 
     content_man.register_objects(range(10))
 

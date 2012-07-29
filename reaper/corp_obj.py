@@ -3,13 +3,13 @@ import logging
 import threading
 from bs4 import BeautifulSoup
 import gui
+from gui.thread_watcher import ThreadWatcher
 from reaper import logger
 from reaper.constants import HEADERS, COMMON_HEADERS
 from urllib3.connectionpool import HTTPConnectionPool
 import urllib2
 from urllib2 import URLError
 import re
-import chardet
 #设定错误超时，以免发生一直卡住的现象
 urllib2.socket.setdefaulttimeout(30)
 class CorpItem(object):
@@ -18,7 +18,7 @@ class CorpItem(object):
     _soqi_conn_pool = HTTPConnectionPool(host='www.soqi.cn', maxsize=50, block=True, headers=HEADERS)
     id_pattern = re.compile(r'id_([0-9a-zA-Z]+)\.html$')
 
-    def __init__(self, raw_content, page_num, city_id, logger=logger):
+    def __init__(self, raw_content, page_num, city_id, thread_watcher, logger=logger):
         """构造函数
         raw_content: bs4里的对象，根节点应为<li>
         page_num: 被抓取到的页数
@@ -27,7 +27,8 @@ class CorpItem(object):
         self.city_id = city_id
         # self.raw = raw_content
         self.logger = logger
-        self.extracted = False
+        self.thread_watcher = thread_watcher
+        # self.extracted = False
 
         self.extract_info(raw_content)
 
@@ -51,7 +52,7 @@ class CorpItem(object):
         tag_a = div.find(name='a', attrs={'title': u'官方网站'})
         link = tag_a.get('href') if tag_a else ''
         if link and (not link.startswith('http://')):
-            logger.warning('为%s加上了`http://\'', link)
+            logger.warning('为%s加上了`http://\'', link.encode('utf-8'))
             link = 'http://' + link
         return link
 
@@ -93,7 +94,7 @@ class CorpItem(object):
     def __getattr__(self, item):
         """因为CorpItem为部分惰性加载的原因，需要对不是惰性加载的属性做标记"""
         if item in ['introduction', 'product', 'website_title']:
-            if self.thread.is_alive:
+            if self.thread.is_alive():
                 self.thread.join(10)
             return self.__getattribute__('_' + item)
         else:
@@ -115,56 +116,41 @@ class CorpItem(object):
 
         def per_thread():
             """略"""
-            if self.website:
-                if 'hc360' in self.website or 'alibaba' in self.website:
-                    return
-
-                try:
-                    if gui.misc.STOP_CLICKED:
+            with self.thread_watcher.register(self.corp_name.decode('utf-8') + u'线程'):
+                if self.website:
+                    if 'hc360' in self.website or 'alibaba' in self.website:
                         return
 
-                    request = urllib2.Request(self.website, headers=COMMON_HEADERS)
-                    response = urllib2.urlopen(request)
-                    self.logger.info('正在连接 %s' % self.website)
-                    if response:
-                        htmlfile=response.read()
-                        soup = BeautifulSoup(htmlfile, 'lxml')
-                        title = soup.head.title.get_text()
-                        try:
-                            charset=re.findall(r'(?<=charset=").*?(?=")',htmlfile,re.DOTALL)[0].lower()
-                        except :
-                            try :
-                                charset=re.findall(r'(?<=charset=).*?(?=")',htmlfile,re.DOTALL)[0].lower()
-                            except :
-                                charset='utf-8'
-                        #charset=chardet.detect(response.read())['encoding'].lower()
-                        if charset=='gbk' :
-                            self._website_title = title.decode('gbk').encode('utf-8')
-                        if charset=='gb2312' :
-                            self._website_title = title.decode('gb2312').encode('utf-8')
-                        if charset=='utf-8' or charset=='utf8':
-                            pass
-
-                        self._website_title = title.encode('utf-8')
-                        if (not self._website_title) or ('全球最丰富的供应信息 尽在阿里巴巴' in self._website_title):
+                    try:
+                        if gui.misc.STOP_CLICKED:
                             return
-                    else:
-                        return
 
-                    response = CorpItem._soqi_conn_pool.request('GET', self.id_page)
-                    if response:
-                        self._introduction, self._product = CorpItem.get_corp_intro_and_product(BeautifulSoup(response.data, 'lxml'))
-                except URLError as _:
-                    self.logger.warning('域名%s也许是过期了', self.website.__repr__())
-                except AttributeError as _:
-                    self.logger.warning('%s没有标题', self.website)
-                except ValueError as e:
-                    if 'unknown url type' in e.message:
-                        self.logger.error('未知的URL类型: %s', self.website if self.website else 'n/a')
-                except BaseException as e:
-                    self.logger.error('未知的错误: %s', e)
-                finally:
-                    pass
+                        request = urllib2.Request(self.website, headers=COMMON_HEADERS)
+                        response = urllib2.urlopen(request)
+                        self.logger.info('正在连接 %s' % self.website)
+                        if response:
+                            soup = BeautifulSoup(response.read(), 'lxml')
+                            title = soup.head.title.get_text()
+                            self._website_title = title.encode('utf-8')
+                            if (not self._website_title) or ('全球最丰富的供应信息 尽在阿里巴巴' in self._website_title):
+                                return
+                        else:
+                            return
+
+                        response = CorpItem._soqi_conn_pool.request('GET', self.id_page)
+                        if response:
+                            self._introduction, self._product = CorpItem.get_corp_intro_and_product(BeautifulSoup(response.data, 'lxml'))
+                    except URLError as _:
+                        self.logger.warning('域名%s也许是过期了', self.website.__repr__())
+                    except AttributeError as _:
+                        self.logger.warning('%s没有标题', self.website)
+                    except ValueError as e:
+                        if 'unknown url type' in e.message:
+                            self.logger.error('未知的URL类型: %s', self.website if self.website else 'n/a')
+                    except BaseException as e:
+                        self.logger.error('未知的错误: %s', e)
+                    finally:
+                        pass
 
         # 开启抓取企业和产品简介以及企业主页标题的线程
         self.thread = threading.Thread(target=per_thread, args=())
@@ -240,7 +226,7 @@ if __name__ == '__main__':
 	</div>'''
     soup = BeautifulSoup(dd)
 
-    item = CorpItem(soup, 2, '100000', logger=logging.getLogger(__name__))
+    item = CorpItem(soup, 2, '100000', ThreadWatcher(None), logger=logging.getLogger(__name__))
 
     gui.misc.STOP_CLICKED = False
     if item.is_valid_item():
