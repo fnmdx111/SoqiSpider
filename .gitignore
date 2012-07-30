@@ -6,3 +6,4 @@
 *.rar
 *.tar.gz
 .idea/*
+build/*
