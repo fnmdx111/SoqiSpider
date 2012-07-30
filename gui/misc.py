@@ -58,7 +58,7 @@ class ConfigReader(object):
                 ('100000', '200000', '1', '', '', '250', r'db\company.db3')))
 
         with open(self.config_file, 'r') as f:
-            soup = BeautifulSoup(f.read())
+            soup = BeautifulSoup(f.read(), 'html.parser')
             def _extract(key):
                 tag = soup.find(name='add', attrs={'key': key})
                 return tag['value'] if tag else ''

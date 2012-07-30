@@ -6,16 +6,16 @@ import gui
 from gui.thread_watcher import ThreadWatcher
 from reaper import logger
 from reaper.constants import HEADERS, COMMON_HEADERS
-from urllib3.connectionpool import HTTPConnectionPool
+import urllib3
 import urllib2
 from urllib2 import URLError
 import re
-#设定错误超时，以免发生一直卡住的现象
-# urllib2.socket.setdefaulttimeout(30)
+
+
 class CorpItem(object):
     """对抓取的单个企业数据的集合，和一些常用方法的集合"""
 
-    _soqi_conn_pool = HTTPConnectionPool(host='www.soqi.cn', maxsize=300, headers=HEADERS)
+    _soqi_conn_pool = urllib3.connection_from_url('http://www.soqi.cn', maxsize=300, headers=HEADERS, timeout=15)
     id_pattern = re.compile(r'id_([0-9a-zA-Z]+)\.html$')
 
     def __init__(self, raw_content, page_num, city_id, thread_watcher, logger=logger):
@@ -72,7 +72,7 @@ class CorpItem(object):
         tag_a = soup.find(name='a', attrs={'title': u'公司详细介绍'})
         if tag_a:
             req = urllib2.Request(tag_a.get('href'), headers=HEADERS)
-            soup = BeautifulSoup(urllib2.urlopen(req).read())
+            soup = BeautifulSoup(urllib2.urlopen(req).read(), 'html.parser')
             tag_div = soup.find(name='div', attrs={'class': 'content'})
             if tag_div:
                 intro = tag_div.p.get_text()
@@ -84,7 +84,9 @@ class CorpItem(object):
         """根据企业主页地址判断是否是合法的对象（没用主页的一律抛弃）"""
         if self.website:
             if self.website_title:
+                self.logger.warning('%s %s accepted', self.corp_name, self.website_title)
                 return True
+            self.logger.warning('%s denied', self.corp_name)
 
         return False
 
@@ -97,6 +99,7 @@ class CorpItem(object):
             return self.__getattribute__('_' + item)
         else:
             return self.__getattribute__(item)
+
 
     ENCODING_PATTERN = re.compile(r'<meta\s+[^>]*?charset\s*?="?\s*?([^">]+)')
 
@@ -127,17 +130,18 @@ class CorpItem(object):
                         response = urllib2.urlopen(request,timeout=30)
                         self.logger.info('正在连接 %s' % self.website)
                         if response:
-                            soup = BeautifulSoup(response.read(), 'lxml')
-                            title = soup.head.title.get_text()
-                            self._website_title = title.encode('utf-8')
-                            if (not self._website_title) or ('全球最丰富的供应信息 尽在阿里巴巴' in self._website_title):
+                            soup = BeautifulSoup(response.read(), 'html.parser')
+                            title = soup.head.title.get_text().encode('utf-8')
+                            if (not title) or ('阿里巴巴' in title):
                                 return
+                            else:
+                                self._website_title = title
                         else:
                             return
 
                         response = CorpItem._soqi_conn_pool.request('GET', self.id_page)
                         if response:
-                            self._introduction, self._product = CorpItem.get_corp_intro_and_product(BeautifulSoup(response.data, 'lxml'))
+                            self._introduction, self._product = CorpItem.get_corp_intro_and_product(BeautifulSoup(response.data, 'html.parser'))
                     except URLError as _:
                         self.logger.warning('域名%s也许是过期了', self.website.__repr__())
                     except AttributeError as _:
@@ -222,7 +226,7 @@ if __name__ == '__main__':
 
 		</p>
 	</div>'''
-    soup = BeautifulSoup(dd)
+    soup = BeautifulSoup(dd, 'html.parser')
 
     item = CorpItem(soup, 2, '100000', ThreadWatcher(None), logger=logging.getLogger(__name__))
 
