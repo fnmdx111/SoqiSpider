@@ -1,0 +1,10 @@
+('d:/workspace/soqispider/build\\build\\pyi.win32\\spider\\spider.exe',
+ False,
+ False,
+ None,
+ None,
+ [],
+ False,
+ True,
+ 0,
+ 1342883282L)

@@ -1,0 +1,8 @@
+*.pyc
+*.txt
+*.zip
+*.xls
+*.exe
+*.rar
+*.tar.gz
+.idea/*

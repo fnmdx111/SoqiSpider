@@ -1,0 +1,12 @@
+('d:/workspace/soqispider/build\\build\\pyi.win32\\spider\\outPKG3.pkg',
+ {'BINARY': 1,
+  'DATA': 1,
+  'EXECUTABLE': 1,
+  'EXTENSION': 1,
+  'PYMODULE': 1,
+  'PYSOURCE': 1},
+ [('outPYZ1.pyz', 'd:/workspace/soqispider/build\\build\\pyi.win32\\spider\\outPYZ1.pyz', 'PYZ'), ('iu', 'd:\\pyinstaller\\iu.pyc', 'PYMODULE'), ('struct', 'c:\\Python27\\lib\\struct.pyc', 'PYMODULE'), ('archive', 'd:\\pyinstaller\\archive.pyc', 'PYMODULE'), ('_mountzlib', 'support\\_mountzlib.py', 'PYSOURCE'), ('useUnicode', 'support\\useUnicode.py', 'PYSOURCE'), ('pyi_rth_qt4plugins', 'support/rthooks/pyi_rth_qt4plugins.py', 'PYSOURCE'), ('main', 'D:\\workspace\\SoqiSpider\\main.py', 'PYSOURCE'), ('spider.exe.manifest', 'd:/workspace/soqispider/build\\build\\pyi.win32\\spider\\spider.exe.manifest', 'BINARY')],
+ 1,
+ False,
+ True,
+ 0)
