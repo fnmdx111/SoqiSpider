@@ -1,15 +1,15 @@
 # encoding: utf-8
-import itertools
-from reaper.constants import cities, areas, municipalities, municipality_areas
+from reaper.constants import cities, areas, municipalities, municipality_areas, total_areas
+from reaper.misc import take
 
 city_list = sorted(list(cities))
 
 succ = 0x0
 prev = 0x1
 
-def get_adjacent_city_id(city_id, which_one=succ):
+def get_adjacent_id(id, which_one=succ):
     def _(f, cmp):
-        return (item for item in f(city_list) if cmp(item, city_id)).next()
+        return (item for item in f(sorted(total_areas)) if cmp(item, id)).next()
 
     _cond = {
         succ: (lambda x: x, lambda item, id: item > id),
@@ -18,65 +18,47 @@ def get_adjacent_city_id(city_id, which_one=succ):
     return apply(_, _cond[which_one])
 
 
+def get_counties(city_id):
+    _ = lambda where: lambda item: item.startswith(city_id[:where])
+    if city_id in municipalities:
+        collection = municipality_areas
+        predicate = _(2)
+    else:
+        collection = areas
+        predicate = _(-2)
+
+    return sorted((item for item in collection if predicate(item)))
+
+
+def get_proper_id(id, which_one):
+    idx = 0 if which_one == succ else -1
+    if id in cities:
+        return get_counties(id)[idx]
+    elif id in total_areas:
+        return id
+    else:
+        return get_adjacent_id(id, which_one)
+
+
 def get_ids(start, end):
     if start == end:
-        return (start,)
-
-    def get_counties(city_id):
-        if city_id in municipalities:
-            collection = municipality_areas
-            predicate = lambda item: item.startswith(city_id[:2])
+        if start in cities:
+            return get_counties(start)
+        elif start in total_areas:
+            return start,
         else:
-            collection = areas
-            predicate = lambda item: item.startswith(city_id[:-2])
+            return ()
 
-        return sorted((item for item in collection if predicate(item)))
+    start, end = get_proper_id(start, succ), get_proper_id(end, prev)
 
-    def get_city_id(county_id, which_one):
-        # FIXME bug
-        if county_id[:2] + '0000' in municipalities:
-            return get_adjacent_city_id(county_id, which_one)
+    return (item for item in total_areas if start <= item <= end)
 
-        probable_city_id = county_id[:-2] + '00'
-        if probable_city_id in cities:
-            return probable_city_id
-        else:
-            return get_adjacent_city_id(probable_city_id, which_one)
-
-    def reduce_counties(chunk, city_id):
-        if city_id in municipalities:
-            return chunk
-
-        chunk, counties = list(chunk), list(get_counties(city_id))
-        if chunk == counties:
-            return [city_id]
-        else:
-            return chunk
-
-    start_city_id = get_city_id(start, succ)
-    end_city_id = get_city_id(end, prev)
-
-    counties_chunk1 = itertools.dropwhile(
-        lambda county_id: county_id < start,
-        get_counties(start_city_id)
-    )
-    counties_chunk1 = reduce_counties(counties_chunk1, start_city_id)
-
-    cities_chunk = (item for item in cities if start_city_id < item < end_city_id)
-
-    counties_chunk2 = itertools.takewhile(
-        lambda county_id: county_id <= end,
-        get_counties(end_city_id)
-    )
-    counties_chunk2 = reduce_counties(counties_chunk2, end_city_id)
-
-    if start_city_id == end_city_id:
-        return set(counties_chunk1) & set(counties_chunk2)
-    else:
-        return itertools.chain(counties_chunk1, cities_chunk, counties_chunk2)
 
 
 if __name__ == '__main__':
-    print sorted(list(get_ids('420600', '420600')))
+    assert sorted(get_ids('000000', '999999')) == sorted(total_areas)
+    for item1, item2 in zip(take(sorted(list(get_ids('000000', '999999')))), take(sorted(total_areas))):
+        print '%s\t\t%s' % (item1, item2)
+    # print sorted(list(get_ids('150000', '170000')))
 
 
