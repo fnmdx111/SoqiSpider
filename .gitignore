@@ -1,7 +1,8 @@
-*.py[cod]
-workspace.xml
-.idea
+*.pyc
 *.txt
-*.exe
 *.zip
 *.xls
+*.exe
+*.rar
+*.tar.gz
+.idea

@@ -1,4 +1,5 @@
 # encoding: utf-8
+
 import logging
 import threading
 from bs4 import BeautifulSoup
@@ -6,16 +7,16 @@ import gui
 from gui.thread_watcher import ThreadWatcher
 from reaper import logger
 from reaper.constants import HEADERS, COMMON_HEADERS
-import urllib3
+from urllib3.connectionpool import HTTPConnectionPool
 import urllib2
 from urllib2 import URLError
 import re
-
+import chardet
 
 class CorpItem(object):
     """对抓取的单个企业数据的集合，和一些常用方法的集合"""
 
-    _soqi_conn_pool = urllib3.connection_from_url('http://www.soqi.cn', maxsize=300, headers=HEADERS, timeout=15)
+    _soqi_conn_pool = HTTPConnectionPool(host='www.soqi.cn', maxsize=50, block=True, headers=HEADERS)
     id_pattern = re.compile(r'id_([0-9a-zA-Z]+)\.html$')
 
     def __init__(self, raw_content, page_num, city_id, thread_watcher, logger=logger):
@@ -84,7 +85,6 @@ class CorpItem(object):
         """根据企业主页地址判断是否是合法的对象（没用主页的一律抛弃）"""
         if self.website:
             if self.website_title:
-                self.logger.warning('%s %s accepted', self.corp_name, self.website_title)
                 return True
             self.logger.warning('%s denied', self.corp_name)
 
@@ -129,13 +129,18 @@ class CorpItem(object):
                         request = urllib2.Request(self.website, headers=COMMON_HEADERS)
                         response = urllib2.urlopen(request,timeout=30)
                         self.logger.info('正在连接 %s' % self.website)
+
+
                         if response:
-                            soup = BeautifulSoup(response.read(), 'html.parser')
+                            raw_file = response.read()
+                            soup = BeautifulSoup(raw_file,
+                                                 'html.parser',
+                                                 from_encoding=chardet.detect(raw_file)['encoding'].lower())
                             title = soup.head.title.get_text().encode('utf-8')
                             if (not title) or ('阿里巴巴' in title):
-                                return
-                            else:
                                 self._website_title = title
+                            else:
+                                return
                         else:
                             return
 
@@ -188,21 +193,19 @@ class CorpItem(object):
 
 if __name__ == '__main__':
     dd = '''<div class="itemblocks">
-		<h3><a href="http://www.soqi.cn/detail/id_8233A3SSZFO6.html" target="_blank">襄樊康晨机电工程有限<em>公司</em></a></h3>
+        <h3><a href="http://www.soqi.cn/detail/id_8233A3SSZFO6.html" target="_blank">襄樊康晨机电工程有限<em>公司</em></a></h3>
 
-		<p class="prdct">产品服务:研制、开发、生产、销售柴油发电机组
-		   <!--
-
-
-
-    				研制、开发、生产、销售柴油发电机组
-
-    		-->
-    	</p>
-    	<p>地址: 湖北省襄樊（国家）高新技术产业开发区汽车工业园12号路北(441003)</p>
-		<p class="sch_a"><a href="http://tool.soqi.cn/toolsDetail/8233A3SSZFO6" title="工商档案" target="_blank" rel="nofollow">工商档案</a>
+        <p class="prdct">产品服务:研制、开发、生产、销售柴油发电机组
+           <!--
 
 
+
+                    研制、开发、生产、销售柴油发电机组
+
+            -->
+        </p>
+        <p>地址: 湖北省襄樊（国家）高新技术产业开发区汽车工业园12号路北(441003)</p>
+        <p class="sch_a"><a href="http://tool.soqi.cn/toolsDetail/8233A3SSZFO6" title="工商档案" target="_blank" rel="nofollow">工商档案</a>
 
 
 
@@ -213,7 +216,9 @@ if __name__ == '__main__':
 
 
 
-			 - <a href="http://www.xfkcme.com" title="官方网站" target="_blank" rel="nofollow">官方网站</a>
+
+
+             - <a href="http://www.xfkcme.com" title="官方网站" target="_blank" rel="nofollow">官方网站</a>
 
 
 
@@ -224,8 +229,8 @@ if __name__ == '__main__':
 
 
 
-		</p>
-	</div>'''
+        </p>
+    </div>'''
     soup = BeautifulSoup(dd, 'html.parser')
 
     item = CorpItem(soup, 2, '100000', ThreadWatcher(None), logger=logging.getLogger(__name__))
