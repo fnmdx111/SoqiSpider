@@ -11,11 +11,11 @@ import urllib2
 from urllib2 import URLError
 import re
 #设定错误超时，以免发生一直卡住的现象
-urllib2.socket.setdefaulttimeout(30)
+# urllib2.socket.setdefaulttimeout(30)
 class CorpItem(object):
     """对抓取的单个企业数据的集合，和一些常用方法的集合"""
 
-    _soqi_conn_pool = HTTPConnectionPool(host='www.soqi.cn', maxsize=50, block=True, headers=HEADERS)
+    _soqi_conn_pool = HTTPConnectionPool(host='www.soqi.cn', maxsize=300, headers=HEADERS)
     id_pattern = re.compile(r'id_([0-9a-zA-Z]+)\.html$')
 
     def __init__(self, raw_content, page_num, city_id, thread_watcher, logger=logger):
@@ -25,10 +25,8 @@ class CorpItem(object):
         city_id: 被抓去到的城市号"""
         self.page_num = page_num
         self.city_id = city_id
-        # self.raw = raw_content
         self.logger = logger
         self.thread_watcher = thread_watcher
-        # self.extracted = False
 
         self.extract_info(raw_content)
 
@@ -126,7 +124,7 @@ class CorpItem(object):
                             return
 
                         request = urllib2.Request(self.website, headers=COMMON_HEADERS)
-                        response = urllib2.urlopen(request)
+                        response = urllib2.urlopen(request,timeout=30)
                         self.logger.info('正在连接 %s' % self.website)
                         if response:
                             soup = BeautifulSoup(response.read(), 'lxml')
