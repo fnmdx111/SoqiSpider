@@ -6,13 +6,15 @@ import MySQLdb
 class MySQLWriter(object):
 
     SQL_INS = 'insert into %s values(%%s, %%s, %%s, %%s, %%s, %%s)'
-    SQL_DEL = "delete from `%s`, `%s` where `ID`='%%s'"
+    SQL_DEL = "delete from  companyinformation where `ID`='%s'"
 
     def __init__(self, logger, host='localhost', user='root', password='123456', db='companyinformation'):
-        self.conn = MySQLdb.connect(host, user, password, db, charset='utf-8')
-        self.cursor = self.conn.cursor()
-        self.logger = logger
-
+        try:
+            self.conn = MySQLdb.connect(host, user, password, db, charset='utf8')
+            self.cursor = self.conn.cursor()
+            self.logger = logger
+        except BaseException:
+            self.logger.info('mysql数据库服务没有启动')
 
     def insert(self, obj, table_name='companyinformation'):
         tpl = obj.get_info_as_tuple()
@@ -20,7 +22,7 @@ class MySQLWriter(object):
         try:
             self.cursor.execute(sql_ins, tpl)
         except BaseException:
-            self.cursor.execute(MySQLWriter.SQL_DEL % table_name, ())
+            self.cursor.execute(MySQLWriter.SQL_DEL % tpl[0])
             self.logger.info('去重操作: 该数据存在重复,主键无法有相同值，已删除原有数据库中该条数据并重新生成:')
             self.logger.info('ID: %s' % tpl[0])
             self.logger.info('公司名: %s' % tpl[1])
