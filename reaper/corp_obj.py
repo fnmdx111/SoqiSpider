@@ -137,6 +137,12 @@ class CorpItem(object):
                                                  'html.parser',
                                                  from_encoding=chardet.detect(raw_file)['encoding'].lower())
                             title = soup.head.title.get_text().encode('utf-8')
+                            #self._website_title = title
+
+                            #if (not self._website_title) or ('阿里巴巴' in self._website_title) or ('全球最丰富的供应信息 尽在阿里巴巴' in self._website_title) :
+                            #    self._website_title=""
+                            #    return
+
                             if (not title) or ('阿里巴巴' in title):
                                 self._website_title = title
                             else:
