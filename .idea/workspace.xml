@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="7ca28858-e9a5-4619-a81a-c9693fe37f51" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-    </list>
+    <list default="true" id="7ca28858-e9a5-4619-a81a-c9693fe37f51" name="Default" comment="" />
     <list id="a96b8c10-e854-4c5d-b136-1d54ebec62b4" name="Rejected commit: Default" comment="添加了插入excel的功能" />
     <ignored path="SoqiSpider.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -517,7 +515,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="2" y="2" width="1278" height="940" extended-state="1" />
+    <frame x="2" y="2" width="1278" height="940" extended-state="0" />
     <editor active="false" />
     <layout>
       <window_info id="Data Sources" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32976973" sideWeight="0.67994857" order="3" side_tool="false" content_ui="tabs" />
