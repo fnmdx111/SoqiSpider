@@ -21,15 +21,8 @@ class ContentManager(object):
                 while self.objects:
                     if gui.misc.STOP_CLICKED:
                         return
-                    # th = threading.Thread(target=self.func, args=(self.objects.pop(0),))
-                    # th.start()
-                    # th.join()
                     self.func(self.objects.pop(0))
                     self.logger.info('处理了一个对象，剩余: %s', len(self.objects))
-
-                    # thread = threading.Thread(target=self.func, args=(self.objects.pop(0),))
-                    # thread.start()
-                    # self.threads.append(thread)
 
         return func
 
@@ -48,17 +41,6 @@ class ContentManager(object):
 
     def is_job_done(self):
         return not len(self.objects)
-
-
-    #def join_all(self):
-    #     self.thread.join()
-
-    #     for thread in self.threads:
-    #         if gui.misc.STOP_CLICKED:
-    #             return
-
-    #         if thread.is_alive():
-    #             thread.join()
 
 
 

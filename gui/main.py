@@ -247,7 +247,7 @@ class Form(QDialog, object):
         # 单位时间总线程数: THREAD_AMOUNT_SAFE * thread_num + 企业数 / C < 500
         self.logger.debug('starting threads')
 
-        conn_pool = HTTPConnectionPool(host='www.soqi.cn', headers=HEADERS)
+        conn_pool = HTTPConnectionPool(host='www.soqi.cn', timeout=15, headers=HEADERS)
 
         def _(params):
             with self.thread_watcher.register(u'分抓取线程'):
@@ -263,6 +263,8 @@ class Form(QDialog, object):
                             item_amount = get_estimate_item_amount(keyword, param.city_id, conn_pool, self.logger)
                             if item_amount > 0:
                                 param.to_page = int(item_amount / ITEM_DENSITY) + 1
+                            elif item_amount == -2:
+                                self.btn_start_click()
                             else:
                                 param.to_page = 2000
                             self.logger.info('总项目数量: %s, 估计结束页: %s', item_amount, param.to_page)

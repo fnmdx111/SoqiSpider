@@ -6,6 +6,7 @@ import gui
 from reaper.constants import REQUIRED_SUFFIXES
 from reaper.corp_obj import CorpItem
 from reaper import misc
+from urllib3.exceptions import MaxRetryError, HostChangedError
 
 def _grab(keyword, page_number, pool, thread_watcher, city_code='100000', logger=None, predicate=None):
     """按照给定的参数进行抓取，必要时执行初步过滤
@@ -38,10 +39,15 @@ def _grab(keyword, page_number, pool, thread_watcher, city_code='100000', logger
     encoded_values = urllib.urlencode(values)
 
     # 出于防封考虑，使用连接池进行连接
-    response = pool.request('GET', 'http://www.soqi.cn/search?' + encoded_values)
+    data = ''
+    try:
+        response = pool.request('GET', 'http://www.soqi.cn/search?' + encoded_values)
+        data = response.data
+    except HostChangedError:
+        logger.critical('由于若干原因，已被屏蔽')
 
     # soqi.cn网页不标准，需要使用高级一点的解析工具
-    soup = BeautifulSoup(response.data, 'lxml')
+    soup = BeautifulSoup(data, 'html.parser')
 
     candidates = map(
         lambda raw: CorpItem(raw, page_number, city_code, logger=logger, thread_watcher=thread_watcher), # 将soup里的class为resultSummary的div转化为CorpItem对象
@@ -73,12 +79,17 @@ def grab(keyword, pool, pages, thread_watcher, city_code='100000', logger=None, 
         if gui.misc.STOP_CLICKED:
             break
 
-        is_empty_page, grabbed = _grab(keyword,
-                                       page, pool,
-                                       city_code=city_code,
-                                       logger=logger,
-                                       predicate=predicate,
-                                       thread_watcher=thread_watcher)
+        try:
+            is_empty_page, grabbed = _grab(keyword,
+                                           page, pool,
+                                           city_code=city_code,
+                                           logger=logger,
+                                           predicate=predicate,
+                                           thread_watcher=thread_watcher)
+        except MaxRetryError:
+            logger.error('urllib3 reports MaxRetryError')
+            is_empty_page, grabbed = True, []
+
         if (not is_empty_page) and (not len(grabbed)):
             logger.info('%s非空，但是没有符合条件的结果', page)
 

@@ -2,6 +2,7 @@
 import urllib
 from bs4 import BeautifulSoup
 from reaper.constants import PATTERN_ITEM_AMOUNT
+from urllib3.exceptions import HostChangedError
 
 
 last_page_found = 0
@@ -38,18 +39,22 @@ def get_estimate_item_amount(keyword, city_id, pool, logger, max_retry=15):
     def p(tag):
         return tag.name == 'span' and '项结果'.decode('utf-8') in tag.get_text()
 
-    while retry < max_retry:
-        response = pool.request('GET', 'http://www.soqi.cn/search?' + encoded_value)
-        soup = BeautifulSoup(response.data)
+    try:
+        while retry < max_retry:
+            response = pool.request('GET', 'http://www.soqi.cn/search?' + encoded_value)
+            soup = BeautifulSoup(response.data, 'html.parser')
 
-        tag = soup.find(p)
-        if tag:
-            matches = PATTERN_ITEM_AMOUNT.search(tag.get_text().encode('utf-8'))
-            if matches:
-                return int(matches.group(1))
-        logger.info('soqi.cn返回空网页，重试')
+            tag = soup.find(p)
+            if tag:
+                matches = PATTERN_ITEM_AMOUNT.search(tag.get_text().encode('utf-8'))
+                if matches:
+                    return int(matches.group(1))
+            logger.info('soqi.cn返回空网页，重试')
 
-        retry += 1
+            retry += 1
+    except HostChangedError:
+        logger.critical('由于若干原因，已被屏蔽')
+        return -2
 
     return -1
 
