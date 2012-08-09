@@ -6,22 +6,32 @@ from gui.misc import ConfigReader
 from gui.main import *
 from insert.excel import ExcelWriter
 from insert.mysql import MySQLWriter
-
+import time
 
 if __name__ == '__main__':
-    excel_writer = ExcelWriter(None, output_name=str(int(time.time())) + '.xls')
-    # mysql_writer = MySQLWriter(None)
 
+    datetime=time.strftime("%Y-%m-%d %H-%M-%S", time.localtime(time.time()))
+    excel_writer = ExcelWriter(None, output_name="companyinformation "+str(datetime) + '.xls')
+    try:
+        mysql_writer = MySQLWriter(None)
+    except BaseException:
+        pass
     def init(logger):
+        global mysql
         excel_writer.logger = logger
-        # mysql_writer.logger = logger
-
+        #mysql_writer=MySQLWriter(logger)
+        try:
+            mysql_writer.logger = logger
+        except BaseException:
+            pass
 
     def destroy():
         excel_writer.commit()
-        # mysql_writer.commit()
-        # mysql_writer.finish()
-
+        try:
+            mysql_writer.commit()
+            mysql_writer.finish()
+        except BaseException:
+            pass
 
     the_lock = threading.RLock()
     def transact(item):
@@ -33,12 +43,11 @@ if __name__ == '__main__':
             excel_writer.commit()
             excel_writer.next_row()
 
-            # mysql_writer.insert(item)
-            # try:
-            #     mysql_writer.commit()
-            #     pass
-            # except BaseException:
-            #     pass
+            try:
+                mysql_writer.insert(item)
+                mysql_writer.commit()
+            except BaseException:
+                pass
 
 
     app = QApplication(sys.argv)
