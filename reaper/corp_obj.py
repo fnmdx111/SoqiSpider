@@ -126,9 +126,6 @@ class CorpItem(object):
                         if gui.misc.STOP_CLICKED:
                             return
 
-                        if '08708' in self.website:
-                            pass
-
                         request = urllib2.Request(self.website, headers=COMMON_HEADERS)
                         self.logger.info('正在连接 %s' % self.website)
                         response = urllib2.urlopen(request,timeout=30)
