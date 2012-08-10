@@ -5,7 +5,7 @@ import sys
 from gui.misc import ConfigReader
 from gui.main import *
 from insert.excel import ExcelWriter
-from insert.mysql import MySQLWriter
+# from insert.mysql import MySQLWriter
 import time
 
 if __name__ == '__main__':
@@ -13,7 +13,8 @@ if __name__ == '__main__':
     datetime=time.strftime("%Y-%m-%d %H-%M-%S", time.localtime(time.time()))
     excel_writer = ExcelWriter(None, output_name="companyinformation "+str(datetime) + '.xls')
     try:
-        mysql_writer = MySQLWriter(None)
+        # mysql_writer = MySQLWriter(None)
+        pass
     except BaseException:
         pass
     def init(logger):
