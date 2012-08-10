@@ -95,7 +95,7 @@ class CorpItem(object):
         """因为CorpItem为部分惰性加载的原因，需要对不是惰性加载的属性做标记"""
         if item in ['introduction', 'product', 'website_title']:
             if self.thread.is_alive():
-                self.thread.join()
+                self.thread.join(10)
             return self.__getattribute__('_' + item)
         else:
             return self.__getattribute__(item)
